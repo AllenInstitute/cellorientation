@@ -1,4 +1,4 @@
-name: csnet
+name: gsel
 channels:
   - conda-forge
   - bioconda
@@ -8,11 +8,10 @@ dependencies:
   - conda-build
   - coverage
   - dca
-  - dask
-  - fire
   - ipython
   - jupyterlab
-  - networkx
+  - matplotlib
+  - natsort
   - numba
   - numpy
   - pandas
@@ -20,11 +19,9 @@ dependencies:
   - pytest
   - pytest-cov
   - python=3.6
-  - python-chromedriver-binary
   - scanpy
   - scikit-learn
   - scipy
-  - selenium
   - sphinx
   - sphinx_rtd_theme
   - tqdm
