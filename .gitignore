@@ -1,8 +1,5 @@
 *.csv
 *.mtx
-data/*
-*/data/*
-*/*/data/*
 *.ipynb
 
 # Byte-compiled / optimized / DLL files
