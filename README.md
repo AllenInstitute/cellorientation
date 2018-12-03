@@ -11,7 +11,7 @@ If you don't have `conda` installed and set up for Python 3.x, install it using 
 git clone https://github.com/donovanr/geneselection.git
 cd geneselection
 conda env create -f .environment.yml
-conda activate geneselection
+conda activate gsel
 conda develop .
 ```
 
