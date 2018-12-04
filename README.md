@@ -13,6 +13,7 @@ cd geneselection
 conda env create -f .environment.yml
 conda activate gsel
 conda develop .
+pre-commit install
 ```
 
 ## Development
@@ -39,7 +40,7 @@ sphinx-build -b html docs/source docs/build
 You may have to create `docs/build` if it doesn't exist yet.
 
 ### Pre-Commit Hooks
-Pre-commit hooks are configured in [.pre-commit-config.yaml](../master/.pre-commit-config.yaml), and need to be set up (once) with `pre-commit install`.  [pre-commit](https://pre-commit.com/) itself can be installed with `pip`.
+Pre-commit hooks are configured in [.pre-commit-config.yaml](../master/.pre-commit-config.yaml).
 
 The pre-commit hooks we use are:
 - [Black](https://black.readthedocs.io/en/stable/) for formatting, with the default settings
