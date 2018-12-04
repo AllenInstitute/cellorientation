@@ -1,5 +1,6 @@
 name: gsel
 channels:
+  - pytorch
   - conda-forge
   - bioconda
 dependencies:
@@ -8,6 +9,7 @@ dependencies:
   - conda-build
   - coverage
   - dca
+  - ignite
   - ipython
   - jupyterlab
   - matplotlib
@@ -24,5 +26,6 @@ dependencies:
   - scipy
   - sphinx
   - sphinx_rtd_theme
+  - torch
+  - torchvision
   - tqdm
-  - vega_datasets
