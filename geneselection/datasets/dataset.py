@@ -13,6 +13,7 @@ class GSDataset(Dataset):
         :param as_tensor: If True the access method returns rows as Tensors if False it returns ndarrays
         :param with_obj_label: If true return Tuple(obj_label: str, Tensor or ndarray)
         """
+        super(GSDataset, self).__init__()
         self.data = data.copy()
         self.return_tensor=as_tensor
         self.with_obj_label=with_obj_label
@@ -31,3 +32,5 @@ class GSDataset(Dataset):
         keys = self.data.obsm[index]
         return (keys, row)
 
+    def __add__(self, other):
+        self.data.concatenate(other)
