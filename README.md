@@ -8,7 +8,7 @@ We use [Conda](https://conda.io/) to manage the development environment, with de
 If you don't have `conda` installed and set up for Python 3.x, install it using the instructions on their site, and then install this package with
 
 ```
-git clone https://github.com/donovanr/geneselection.git
+git clone git@github.com:AllenCellModeling/geneselection.git
 cd geneselection
 conda env create -f .environment.yml
 conda activate gsel
