@@ -8,7 +8,9 @@ from ..utils.dataloader import default_collate
 from typing import Dict, List, Union
 
 
-
+class GSDatasetVarMismatchError(Exception):
+    """Exception for when asked to merge 2 GSDatasets with different var classes (columns)"""
+    pass
 
 
 class GSDataset(Dataset):
@@ -58,7 +60,8 @@ class GSDataset(Dataset):
         )
 
     def __add__(self, other: 'GSDataset'):
-        assert self.var.equals(other.var)
+        if not self.var.equals(other.var):
+            raise GSDatasetVarMismatchError
         return GSDataset(
             X=torch.cat([self.X, other.X]),
             obs=pd.concat([self.obs, other.obs]),
