@@ -1,13 +1,5 @@
-import torch
 import numpy as np
-import scipy.misc
-import pickle
 import time
-
-from integrated_cell.model_utils import tensor2img
-from integrated_cell.utils import plots as plots
-from .. import utils
-
 
 # This is the base class for trainers
 
@@ -46,14 +38,15 @@ class Model(object):
         return len(self.logger)
 
     def get_current_epoch(self, iteration=-1):
-
         if iteration == -1:
             iteration = self.get_current_iter()
 
         return np.floor(iteration / self.iters_per_epoch)
 
-
     def save(self, save_dir):
+        raise NotImplementedError
+
+    def save_progress(self):
         raise NotImplementedError
 
     def maybe_save(self):
@@ -78,141 +71,6 @@ class Model(object):
 
         return saved
 
-    def save_progress(self):
-        gpu_id = self.gpu_ids[0]
-        epoch = self.get_current_epoch()
-
-        data_provider = self.data_provider
-        enc = self.enc
-        dec = self.dec
-
-        enc.train(False)
-        dec.train(False)
-
-        ###############
-        # TRAINING DATA
-        ###############
-        train_classes = data_provider.get_classes(
-            np.arange(0, data_provider.get_n_dat("train", override=True)), "train"
-        )
-        _, train_inds = np.unique(train_classes.numpy(), return_index=True)
-
-        x, classes, ref = data_provider.get_sample("train", train_inds)
-        x = x.cuda(gpu_id)
-        classes = classes.type_as(x).long()
-        ref = ref.type_as(x)
-
-        with torch.no_grad():
-            z = enc(x)
-
-            if self.provide_decoder_vars:
-                c = 0
-                if self.crit_z_class is not None:
-                    z[c] = torch.log(
-                        utils.index_to_onehot(classes, data_provider.get_n_classes())
-                        + 1e-8
-                    )
-                    c += 1
-                if self.crit_z_ref is not None:
-                    z[c] = ref
-
-            xHat = dec(z)
-
-        imgX = tensor2img(x.data.cpu())
-        imgXHat = tensor2img(xHat.data.cpu())
-        imgTrainOut = np.concatenate((imgX, imgXHat), 0)
-
-        ###############
-        # TESTING DATA
-        ###############
-        test_classes = data_provider.get_classes(
-            np.arange(0, data_provider.get_n_dat("test")), "test"
-        )
-        _, test_inds = np.unique(test_classes.numpy(), return_index=True)
-
-        x, classes, ref = data_provider.get_sample("test", test_inds)
-        x = x.cuda(gpu_id)
-        classes = classes.type_as(x).long()
-        ref = ref.type_as(x)
-
-        x = data_provider.get_images(test_inds, "test").cuda(gpu_id)
-        with torch.no_grad():
-            z = enc(x)
-
-            if self.provide_decoder_vars:
-                c = 0
-                if self.crit_z_class is not None:
-                    z[c] = torch.log(
-                        utils.index_to_onehot(classes, data_provider.get_n_classes())
-                        + 1e-8
-                    )
-                    c += 1
-                if self.crit_z_ref is not None:
-                    z[c] = ref
-
-            xHat = dec(z)
-
-        z = list()
-        if self.crit_z_class is not None:
-            class_var = torch.log(
-                utils.index_to_onehot(classes, data_provider.get_n_classes()) + 1e-8
-            )
-            z.append(class_var)
-
-        if self.crit_z_ref is not None:
-            ref_var = (
-                torch.Tensor(data_provider.get_n_classes(), enc.n_ref)
-                .normal_(0, 1)
-                .cuda(gpu_id)
-            )
-            z.append(ref_var)
-
-        loc_var = (
-            torch.Tensor(data_provider.get_n_classes(), enc.n_latent_dim)
-            .normal_(0, 1)
-            .cuda(gpu_id)
-        )
-        z.append(loc_var)
-
-        with torch.no_grad():
-            x_z = dec(z)
-
-        imgX = tensor2img(x.data.cpu())
-        imgXHat = tensor2img(xHat.data.cpu())
-        imgX_z = tensor2img(x_z.data.cpu())
-        imgTestOut = np.concatenate((imgX, imgXHat, imgX_z), 0)
-
-        imgOut = np.concatenate((imgTrainOut, imgTestOut))
-
-        scipy.misc.imsave(
-            "{0}/progress_{1}.png".format(self.save_dir, int(epoch - 1)), imgOut
-        )
-
-        enc.train(True)
-        dec.train(True)
-
-        # pdb.set_trace()
-        # zAll = torch.cat(zAll,0).cpu().numpy()
-
-        embedding = torch.cat(self.zAll, 0).cpu().numpy()
-
-        pickle.dump(
-            embedding, open("{0}/embedding_tmp.pkl".format(self.save_dir), "wb")
-        )
-        pickle.dump(self.logger, open("{0}/logger_tmp.pkl".format(self.save_dir), "wb"))
-
-        # History
-        plots.history(self.logger, "{0}/history.png".format(self.save_dir))
-
-        # Short History
-        plots.short_history(self.logger, "{0}/history_short.png".format(self.save_dir))
-
-        # Embedding figure
-        plots.embeddings(embedding, "{0}/embedding.png".format(self.save_dir))
-
-        xHat = None
-        x = None
-
     def train(self):
         start_iter = self.get_current_iter()
 
@@ -222,16 +80,15 @@ class Model(object):
 
             start = time.time()
 
-            errors, zLatent = self.iteration()
+            log = self.iteration()
 
             stop = time.time()
             deltaT = stop - start
 
-            self.logger.add(
-                [self.get_current_epoch(), self.get_current_iter()] + errors + [deltaT]
-            )
-            self.zAll.append(zLatent.data.cpu())
+            log["epoch"] = self.get_current_epoch()
+            log["iter"] = self.get_current_iter()
+            log["time"] = deltaT
 
-            if self.maybe_save():
-                self.zAll = list()
+            self.logger.add(log)
 
+            self.maybe_save()
