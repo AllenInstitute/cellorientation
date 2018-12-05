@@ -30,7 +30,7 @@ class GSDataset(Dataset):
             row = Tensor(self.data.X[index])
         if not self.with_obj_label:
             return row
-        keys = self.data.obs[index]
+        keys = self.data.obs.iloc[index, :]
         return (keys, row)
 
     def __add__(self, other):
