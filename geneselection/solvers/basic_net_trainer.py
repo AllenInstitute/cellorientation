@@ -49,6 +49,9 @@ class Model(object):
     def save_progress(self):
         raise NotImplementedError
 
+    def iteration(self):
+        raise NotImplementedError
+
     def maybe_save(self):
 
         epoch = self.get_current_epoch(self.get_current_iter() - 1)
