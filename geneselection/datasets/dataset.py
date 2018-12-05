@@ -7,25 +7,21 @@ from ..utils.dataloader import default_collate
 
 
 def gsdataset_from_anndata(adata: anndata.AnnData):
-    return GSDataset(X=adata.X,
-                     obs=adata.obs,
-                     var=adata.var,
-                     uns=adata.uns)
+    return GSDataset(X=adata.X, obs=adata.obs, var=adata.var, uns=adata.uns)
+
 
 class GSDataset(Dataset):
-    def __init__(self,
-                 X=torch.zeros(1,1),
-                 obs=pd.DataFrame([0]),
-                 var=pd.DataFrame([0]),
-                 uns={}):
+    def __init__(
+        self, X=torch.zeros(1, 1), obs=pd.DataFrame([0]), var=pd.DataFrame([0]), uns={}
+    ):
         """
         A data provider class for the larger project. The idea is to capture an AnnData and then
         serve up the rows as either pytorch Tensors, or numpy ndarrays based on the keyword argument
         :param data: An AnnData object which is copied to protect from changes to the original object.
         """
         super(GSDataset, self).__init__()
-        
-        N,D = X.shape
+
+        N, D = X.shape
         assert N == len(obs) and D == len(var)
 
         self.X = X
