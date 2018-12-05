@@ -3,8 +3,6 @@ import anndata
 from numpy import ndarray
 from torch import Tensor
 
-import scanpy.api as sc
-
 
 class GSDataset(Dataset):
     def __init__(
@@ -40,12 +38,3 @@ class GSDataset(Dataset):
 
     def __add__(self, other):
         self.data.concatenate(other)
-
-
-def get_aics_rnaseq(
-    path="/allen/aics/gene-editing/RNA_seq/scRNAseq_SeeligCollaboration/data_for_modeling/scrnaseq_cardio_20181129.h5ad",
-    **kwargs
-):
-    adata = sc.read(path)
-
-    return GSDataset(adata, **kwargs)
