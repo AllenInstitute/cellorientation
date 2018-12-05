@@ -1,40 +1,56 @@
-from torch.utils.data.dataset import Dataset
 import anndata
-from numpy import ndarray
-from torch import Tensor
+import pandas as pd
+import torch
+from torch.utils.data.dataset import Dataset
+from collections import Iterable
+from ..utils.dataloader import default_collate
+
+
+def gsdataset_from_anndata(adata: anndata.AnnData):
+    return GSDataset(
+        X=torch.from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
+    )
 
 
 class GSDataset(Dataset):
     def __init__(
-        self, data: anndata.AnnData, as_tensor: bool = True, with_obj_label: bool = True
+        self, X=torch.zeros(1, 1), obs=pd.DataFrame([0]), var=pd.DataFrame([0]), uns={}
     ):
         """
         A data provider class for the larger project. The idea is to capture an AnnData and then
         serve up the rows as either pytorch Tensors, or numpy ndarrays based on the keyword argument
         :param data: An AnnData object which is copied to protect from changes to the original object.
-        :param as_tensor: If True the access method returns rows as Tensors if False it returns ndarrays
-        :param with_obj_label: If true return Tuple(obj_label: str, Tensor or ndarray)
         """
         super(GSDataset, self).__init__()
-        self.data = data.copy()
-        self.return_tensor = as_tensor
-        self.with_obj_label = with_obj_label
+
+        N, D = X.shape
+        assert N == len(obs) and D == len(var)
+
+        self.X = X
+        self.obs = obs
+        self.var = var
+        self.uns = uns
 
     def __len__(self) -> int:
-        return self.data.n_obs
+        return len(self.X)
 
-    def __getitem__(
-        self, index: int
-    ) -> [ndarray, Tensor, (ndarray, ndarray), (ndarray, Tensor)]:
-        row = None
-        if not self.return_tensor:
-            row = self.data.X[index]
-        else:
-            row = Tensor(self.data.X[index])
-        if not self.with_obj_label:
-            return row
-        keys = self.data.obs.iloc[index, :]
-        return (keys, row)
+    def _get_item(self, idx):
+        X = self.X[idx]
+        obs = self.obs.iloc[[idx]]
+        return dict(X=X, obs=obs)
+
+    def __getitem__(self, idx):
+        return (
+            default_collate([self._get_item(i) for i in idx])
+            if (isinstance(idx, Iterable) and not isinstance(idx, str))
+            else self._get_item(idx)
+        )
 
     def __add__(self, other):
-        self.data.concatenate(other)
+        assert self.var.equals(other.var)
+        return GSDataset(
+            X=torch.cat([self.X, other.X]),
+            obs=pd.concat([self.obs, other.obs]),
+            var=self.var,
+            uns={**self.uns, **other.uns},
+        )
