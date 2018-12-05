@@ -1,0 +1,28 @@
+{
+	"network_kwargs": {
+		"name": "geneselection.models.bvae",
+		"kwargs": {}
+	},
+	"optim_kwargs": {
+		"name": "torch.nn.Adam",
+		"kwargs": {
+			"lr": 0.001,
+			"betas": [0.9, 0.999]
+		}
+	},
+	"trainer_kwargs": {
+		"name": "geneselection.solvers.bvae",
+		"kwargs": {}
+	},
+	"data_provder_kwargs": {
+		"name": "geneselection.datasets.aics_rnaseq",
+		"kwargs": {
+			"batch_size": 64
+		}
+	},
+	"loss_kwargs": {
+		"name": "torch.nn.MSELoss",
+		"kwargs": {}
+	},
+	"seed": 0
+}
