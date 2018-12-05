@@ -7,7 +7,9 @@ from ..utils.dataloader import default_collate
 
 
 def gsdataset_from_anndata(adata: anndata.AnnData):
-    return GSDataset(X=adata.X, obs=adata.obs, var=adata.var, uns=adata.uns)
+    return GSDataset(
+        X=torch.from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
+    )
 
 
 class GSDataset(Dataset):
