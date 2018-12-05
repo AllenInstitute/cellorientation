@@ -6,18 +6,32 @@ from collections import Iterable
 from ..utils.dataloader import default_collate
 
 
+def gsdataset_from_anndata(adata: anndata.AnnData):
+    return GSDataset(X=adata.X,
+                     obs=adata.obs,
+                     var=adata.var,
+                     uns=adata.uns)
+
 class GSDataset(Dataset):
-    def __init__(self, data: anndata.AnnData):
+    def __init__(self,
+                 X=torch.zeros(1,1),
+                 obs=pd.DataFrame([0]),
+                 var=pd.DataFrame([0]),
+                 uns={}):
         """
         A data provider class for the larger project. The idea is to capture an AnnData and then
         serve up the rows as either pytorch Tensors, or numpy ndarrays based on the keyword argument
         :param data: An AnnData object which is copied to protect from changes to the original object.
         """
         super(GSDataset, self).__init__()
-        self.X = torch.from_numpy(data.X.copy())
-        self.obs = data.obs.copy()
-        self.var = data.var.copy()
-        self.uns = data.uns.copy()
+        
+        N,D = X.shape
+        assert N == len(obs) and D == len(var)
+
+        self.X = X
+        self.obs = obs
+        self.var = var
+        self.uns = uns
 
     def __len__(self) -> int:
         return len(self.X)
@@ -37,10 +51,8 @@ class GSDataset(Dataset):
     def __add__(self, other):
         assert self.var.equals(other.var)
         return GSDataset(
-            anndata.AnnData(
-                X=torch.cat([self.X, other.X]).numpy(),
-                obs=pd.concat([self.obs, other.obs]),
-                var=self.var,
-                uns={**self.uns, **other.uns},
-            )
+            X=torch.cat([self.X, other.X]),
+            obs=pd.concat([self.obs, other.obs]),
+            var=self.var,
+            uns={**self.uns, **other.uns},
         )
