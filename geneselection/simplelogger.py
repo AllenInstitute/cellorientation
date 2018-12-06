@@ -19,7 +19,7 @@ class SimpleLogger:
     def __len__(self):
 
         values = self.log.values()
-        if len(values):
+        if not len(values):
             return 0
 
         return len(next(iter(values)))
