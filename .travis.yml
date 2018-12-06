@@ -32,4 +32,4 @@ install:
   - pip install -e .
 
 script:
-  - pytest -v
+  - pytest -v geneselection/tests
