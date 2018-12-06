@@ -7,7 +7,7 @@ import time
 class Model(object):
     def __init__(
         self,
-        data_provider,
+        dataloader,
         n_epochs,
         gpu_ids,
         save_dir,
@@ -18,7 +18,7 @@ class Model(object):
 
         # self.__dict__.update(kwargs)
 
-        self.data_provider = data_provider
+        self.dataloader = dataloader
         self.n_epochs = n_epochs
 
         self.gpu_ids = gpu_ids
@@ -30,18 +30,18 @@ class Model(object):
 
         self.provide_decoder_vars = provide_decoder_vars
 
-        self.iters_per_epoch = np.ceil(len(data_provider) / data_provider.batch_size)
+        self.iters_per_epoch = np.ceil(len(dataloader.dataset) / dataloader.batch_size)
 
         self.zAll = list()
 
     def get_current_iter(self):
-        return len(self.logger)
+        return int(len(self.logger))
 
     def get_current_epoch(self, iteration=-1):
         if iteration == -1:
             iteration = self.get_current_iter()
 
-        return np.floor(iteration / self.iters_per_epoch)
+        return int(np.floor(iteration / self.iters_per_epoch))
 
     def save(self, save_dir):
         raise NotImplementedError

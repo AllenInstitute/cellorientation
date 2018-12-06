@@ -1,28 +1,37 @@
 {
 	"network_kwargs": {
-		"name": "geneselection.models.bvae",
-		"kwargs": {}
+		"name": "geneselection.models.ae.Autoencoder",
+		"kwargs": {
+            "n_in": 38270
+        }
 	},
 	"optim_kwargs": {
-		"name": "torch.nn.Adam",
+		"name": "torch.optim.Adam",
 		"kwargs": {
 			"lr": 0.001,
 			"betas": [0.9, 0.999]
 		}
 	},
 	"trainer_kwargs": {
-		"name": "geneselection.solvers.bvae",
+		"name": "geneselection.solvers.ae",
 		"kwargs": {}
 	},
-	"data_provder_kwargs": {
+	"dataset_kwargs": {
 		"name": "geneselection.datasets.aics_rnaseq",
+		"kwargs": {}
+	},
+	"data_loader_kwargs": {
+		"name": "geneselection.utils.dataloader.DataLoader",
 		"kwargs": {
-			"batch_size": 64
+			"batch_size": 128,
+			"shuffle": true,
+			"drop_last": false
 		}
 	},
 	"loss_kwargs": {
 		"name": "torch.nn.MSELoss",
 		"kwargs": {}
 	},
-	"seed": 0
+	"seed": 0,
+    "gpu_ids": [0]
 }

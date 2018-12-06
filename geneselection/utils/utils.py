@@ -49,3 +49,17 @@ def get_activation(activation):
 
     elif activation.lower() == "leakyrelu":
         return torch.nn.LeakyReLU(0.2, inplace=True)
+
+
+def load_state(model, optimizer, path, gpu_id):
+
+    checkpoint = torch.load(path)
+
+    model.load_state_dict(checkpoint["model"])
+    optimizer.load_state_dict(checkpoint["optimizer"])
+
+
+def save_state(model, optimizer, path, gpu_id):
+
+    checkpoint = {"model": model.state_dict(), "optimizer": optimizer.state_dict()}
+    torch.save(checkpoint, path)

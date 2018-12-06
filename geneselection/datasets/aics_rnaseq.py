@@ -1,5 +1,5 @@
 import scanpy.api as sc
-from .dataset import GSDataset
+from .dataset import gsdataset_from_anndata
 
 
 def load(
@@ -8,4 +8,4 @@ def load(
 ):
     adata = sc.read(path)
 
-    return GSDataset(adata, **kwargs)
+    return gsdataset_from_anndata(adata)
