@@ -1,9 +1,9 @@
 import anndata
 import pandas as pd
+import torch
 from collections import Iterable
 from ..utils.dataloader import default_collate
 from typing import Dict, List, Union, Mapping, Any
-import torch
 
 
 class GSDatasetVarMismatchError(Exception):
