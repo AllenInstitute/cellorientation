@@ -2,7 +2,7 @@ import anndata
 import pandas as pd
 import torch
 from torch.utils.data.dataset import Dataset
-from torch import Tensor
+from torch import Tensor, zeros
 from collections import Iterable
 from ..utils.dataloader import default_collate
 from typing import Dict, List, Union, Mapping, Any
