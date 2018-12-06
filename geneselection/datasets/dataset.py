@@ -16,7 +16,7 @@ class GSDatasetVarMismatchError(Exception):
 class GSDataset(Dataset):
     def __init__(
         self,
-        x: Tensor=torch.zeros(1, 1),
+        X: Tensor=torch.zeros(1, 1),
         obs: pd.DataFrame=pd.DataFrame([0]),
         var: pd.DataFrame=pd.DataFrame([0]),
         uns: Mapping[Any, Any]={}
@@ -31,10 +31,10 @@ class GSDataset(Dataset):
         """
         super(GSDataset, self).__init__()
 
-        N, D = x.shape
+        N, D = X.shape
         assert N == len(obs) and D == len(var)
 
-        self.X = x
+        self.X = X
         self.obs = obs
         self.var = var
         self.uns = uns
