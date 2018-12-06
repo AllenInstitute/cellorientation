@@ -8,7 +8,7 @@ cache:
     - $HOME/miniconda
 
 before_cache:
-  - rm -rf $HOME/miniconda/envs/chronosynclasticnet
+  - rm -rf $HOME/miniconda/envs/gsel
 
 before_install:
   - |
@@ -26,7 +26,7 @@ before_install:
   - conda update --all
   - conda info -a
   - conda env create -f .environment.yml
-  - source activate chronosynclasticnet
+  - source activate gsel
 
 install:
   - pip install -e .
