@@ -1,54 +1,49 @@
 import pytest
-import scanpy.api.datasets as spd
+import scanpy.api as sc
 import geneselection.datasets.dataset as gds
 
 
 class TestData(object):
     def __init__(self):
-        self.dstruct = spd.krumsiek11()
+        self.dstruct = sc.read('data/gene5RowTestData.h5ad')
+        #row_two is the first 50 values in row 2
+        self.row_two = [6.0664206, 0.81761986, 2.221718, 0.81761986, 6.0939155, 0.0, 0.49014387, 1.2613558,
+                        6.1151004, 1.2613558, 1.6915445, 0.0, 1.0639012, 0.49014387, 1.9913629, 0.49014387,
+                        4.1726575, 0.81761986, 0.0, 0.49014387, 0.81761986, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.46414,
+                        0.49014387, 0.81761986, 1.2613558, 2.7024426, 2.4088187, 0.0, 2.9291346, 1.8017772, 2.9623814,
+                        0.0, 3.755331, 1.4261773, 1.2613558, 0.49014387, 0.81761986, 0.0, 1.6915445, 0.49014387,
+                        0.81761986, 1.6915445, 1.4261773, 3.9914677]
+        self.len_row_two = 50
 
     def get_annData(self):
         return self.dstruct
 
 
-
 @pytest.fixture
-def cell_fates():
+def rna_seq():
     return TestData()
 
-@pytest.fixture
-def rna_seq_without_lablels():
-    return gds.get_aics_rnaseq(with_obj_label=False)
 
-@pytest.fixture
-def rna_seq_with_lables():
-    return gds.get_aics_rnaseq()
+def test_len(rna_seq):
+    ad = rna_seq.get_annData()
+    ds = gds.gsdataset_from_anndata(ad)
+    assert len(ds) == 5
 
 
-def test_len(cell_fates):
-    cf = cell_fates.get_annData()
-    ds = gds.GSDataset(cf)
-    assert len(ds) == 640
+def test_access(rna_seq):
+    ad = rna_seq.get_annData()
+    ds = gds.gsdataset_from_anndata(ad)
+    kval = ds[2]
+    row = kval['X']
+    assert len(row) == 38270
 
 
-def test_access(cell_fates):
-    ds = gds.GSDataset(cell_fates.get_annData(), as_tensor=False, with_obj_label=False)
-    row = ds[2]
-    assert len(row) == 11
+def test_row(rna_seq):
+    ad = rna_seq.get_annData()
+    ds = gds.gsdataset_from_anndata(ad)
+    kval = ds[2]
+    row = kval['X']
+    for i in range(rna_seq.len_row_two):
+        assert row[i] == rna_seq.row_two[i]
 
 
-def test_rna(rna_seq_without_lablels):
-    ds = rna_seq_without_lablels
-    data = ds[2]
-    #print("keys: ", data[0])
-    print("vals: ", data)
-    print(data.shape)
-    assert len(data) == 38270
-
-
-def test_rna_with_labels(rna_seq_with_lables):
-    ds = rna_seq_with_lables
-    objs, vals = ds[2]
-    print("objs: ", objs)
-    print("len: ", len(objs))
-    assert True
