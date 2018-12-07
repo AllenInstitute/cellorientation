@@ -1,7 +1,22 @@
 import os
 import json
 import numpy as np
+from tqdm import tqdm
+import requests
 from sklearn.model_selection import train_test_split
+
+
+def download_file(url, loc="data_files", blocksize=1000000):
+    if not os.path.exists(loc):
+        os.makedirs(loc)
+    local_filename = os.path.join(loc, url.split("/")[-1])
+    if "?dl" in local_filename:
+        local_filename = local_filename.split("?dl")[0]
+    with requests.get(url, stream=True) as r:
+        with open(local_filename, "wb") as f:
+            for chunk in tqdm(r.iter_content(chunk_size=blocksize), unit="MB"):
+                if chunk:
+                    f.write(chunk)
 
 
 def split_anndata(adata, test_size=0.2, random_state=0):
