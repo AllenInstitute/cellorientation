@@ -1,6 +1,7 @@
 data
 cache
 data_files/
+data_cache/
 *.h5ad
 *.csv
 *.mtx
