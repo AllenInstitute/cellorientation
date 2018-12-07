@@ -1,6 +1,7 @@
 data
 cache
 data_files/
+*.h5ad
 *.csv
 *.mtx
 *.ipynb
