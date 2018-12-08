@@ -12,7 +12,9 @@ def load(
     """
     Load requested split of cardio data, where the whole dataset originated at original_fpath.
     Looks for local cache of split, and if it can't find that, makes a split on the fly.
-    If cache=True, caches the result in cache_dir for next time."""
+    If cache=True, caches the result in cache_dir for next time.
+    Loads raw count values.
+    """
 
     original_fname = os.path.basename(original_fpath)
     original_bname, original_ext = os.path.splitext(original_fname)
@@ -21,7 +23,13 @@ def load(
 
     if not os.path.exists(target_fpath):
         adata_in = sc.read_h5ad(original_fpath)
-        split_inds, split_adata = split_anndata(adata_in)
+        adata_raw = sc.AnnData(
+            X=adata_in.raw.X.todense(),
+            obs=adata_in.obs,
+            var=adata_in.var,
+            uns=adata_in.uns,
+        )
+        split_inds, split_adata = split_anndata(adata_raw)
         if cache:
             write_splits(
                 split_inds_dict=split_inds,
