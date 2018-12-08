@@ -5,7 +5,7 @@ import geneselection.datasets.dataset as gds
 
 class TestData(object):
     def __init__(self):
-        self.dstruct = sc.read('data/gene5RowTestData.h5ad')
+        self.dstruct = sc.read('test_data/gene5RowTestData.h5ad')
         #row_two is the first 50 values in row 2
         self.row_two = [6.0664206, 0.81761986, 2.221718, 0.81761986, 6.0939155, 0.0, 0.49014387, 1.2613558,
                         6.1151004, 1.2613558, 1.6915445, 0.0, 1.0639012, 0.49014387, 1.9913629, 0.49014387,
