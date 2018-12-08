@@ -20,7 +20,7 @@ dependencies:
   - pre_commit
   - pytest
   - pytest-cov
-  - python=3.6
+  - python=3.7
   - pytorch
   - scanpy
   - scikit-learn
