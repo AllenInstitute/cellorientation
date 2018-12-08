@@ -3,7 +3,9 @@ import pandas as pd
 from collections import Iterable
 from ..utils.dataloader import default_collate
 from typing import Dict, List, Union, Mapping, Any
-import torch
+from torch import Tensor, from_numpy
+from torch.utils.data.dataset import Dataset
+
 
 
 class GSDatasetVarMismatchError(Exception):
@@ -11,10 +13,10 @@ class GSDatasetVarMismatchError(Exception):
     pass
 
 
-class GSDataset(torch.utils.data.dataset.Dataset):
+class GSDataset(Dataset):
     def __init__(
         self,
-        X: torch.Tensor = torch.zeros(1, 1),
+        X: Tensor = Tensor([[0]]),
         obs: pd.DataFrame = pd.DataFrame([0]),
         var: pd.DataFrame = pd.DataFrame([0]),
         uns: Mapping[Any, Any] = {}
@@ -40,7 +42,7 @@ class GSDataset(torch.utils.data.dataset.Dataset):
     def __len__(self) -> int:
         return len(self.X)
 
-    def _get_item(self, idx: int) -> Dict[torch.Tensor, pd.DataFrame]:
+    def _get_item(self, idx: int) -> Dict[Tensor, pd.DataFrame]:
         """
         Helper function to return a dictionary of {one row of X, obs for row} for one index
         :param idx: index of row to return
@@ -50,7 +52,7 @@ class GSDataset(torch.utils.data.dataset.Dataset):
         obs = self.obs.iloc[[idx]]
         return dict(X=X, obs=obs)
 
-    def __getitem__(self, idx: Union[int, List]) -> Union[Dict[torch.Tensor, pd.DataFrame], List[Dict[torch.Tensor, pd.Series]]]:
+    def __getitem__(self, idx: Union[int, List]) -> Union[Dict[Tensor, pd.DataFrame], List[Dict[Tensor, pd.Series]]]:
         return (
             default_collate([self._get_item(i) for i in idx])
             if (isinstance(idx, Iterable) and not isinstance(idx, str))
@@ -70,5 +72,5 @@ class GSDataset(torch.utils.data.dataset.Dataset):
 
 def gsdataset_from_anndata(adata: anndata.AnnData) -> GSDataset:
     return GSDataset(
-        X=torch.from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
+        X=from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
     )
