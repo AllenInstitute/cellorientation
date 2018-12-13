@@ -1,5 +1,5 @@
 # Geneselection
-[![Build Status](https://www.travis-ci.com/donovanr/geneselection.svg?branch=master)](https://www.travis-ci.com/donovanr/geneselection)
+[![Build Status](https://www.travis-ci.com/AllenCellModeling/geneselection.svg?branch=master)](https://www.travis-ci.com/AllenCellModeling/geneselection)
 [![Documentation Status](https://readthedocs.org/projects/geneselection/badge/?version=latest)](https://geneselection.readthedocs.io/en/latest/?badge=latest)
 
 ## Installation

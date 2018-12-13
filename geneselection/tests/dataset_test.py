@@ -1,54 +1,42 @@
 import pytest
-import scanpy.api.datasets as spd
 import geneselection.datasets.dataset as gds
+from .create_h5ad import CreateH5ad
 
-
-class TestData(object):
+class StubData(object):
     def __init__(self):
-        self.dstruct = spd.krumsiek11()
+        self.rows = 5
+        self.columns = 38270
+        self.dstruct = CreateH5ad(rows=self.rows, columns=self.columns)
 
     def get_annData(self):
         return self.dstruct
 
 
-
 @pytest.fixture
-def cell_fates():
-    return TestData()
-
-@pytest.fixture
-def rna_seq_without_lablels():
-    return gds.get_aics_rnaseq(with_obj_label=False)
-
-@pytest.fixture
-def rna_seq_with_lables():
-    return gds.get_aics_rnaseq()
+def rna_seq():
+    return StubData()
 
 
-def test_len(cell_fates):
-    cf = cell_fates.get_annData()
-    ds = gds.GSDataset(cf)
-    assert len(ds) == 640
+def test_len(rna_seq):
+    ad = rna_seq.get_annData()
+    ds = gds.gsdataset_from_anndata(ad)
+    assert len(ds) == rna_seq.rows
 
 
-def test_access(cell_fates):
-    ds = gds.GSDataset(cell_fates.get_annData(), as_tensor=False, with_obj_label=False)
-    row = ds[2]
-    assert len(row) == 11
+def test_access(rna_seq):
+    ad = rna_seq.get_annData()
+    ds = gds.gsdataset_from_anndata(ad)
+    kval = ds[2]
+    row = kval['X']
+    assert len(row) == rna_seq.columns
 
 
-def test_rna(rna_seq_without_lablels):
-    ds = rna_seq_without_lablels
-    data = ds[2]
-    #print("keys: ", data[0])
-    print("vals: ", data)
-    print(data.shape)
-    assert len(data) == 38270
+def test_row(rna_seq):
+    ad = rna_seq.get_annData()
+    ds = gds.gsdataset_from_anndata(ad)
+    kval = ds[2]
+    row = kval['X']
+    for i in range(rna_seq.columns):
+        assert float(row[i]) == rna_seq.dstruct.X[2, i]
 
 
-def test_rna_with_labels(rna_seq_with_lables):
-    ds = rna_seq_with_lables
-    objs, vals = ds[2]
-    print("objs: ", objs)
-    print("len: ", len(objs))
-    assert True
