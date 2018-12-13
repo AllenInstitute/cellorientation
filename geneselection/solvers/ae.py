@@ -3,6 +3,7 @@ from ..simplelogger import SimpleLogger
 
 from . import basic_net_trainer
 from .. import utils
+from ..utils import plots
 
 import os
 import pickle
@@ -69,12 +70,10 @@ class Model(basic_net_trainer.Model):
         return log
 
     def save_progress(self):
-        #         gpu_id = self.gpu_ids[0]
-        #         epoch = self.get_current_epoch()
-
-        #         data_provider = self.data_provider
-        #         net = self.net
-        pass
+        # History
+        plots.history(self.logger, "{0}/history.png".format(self.save_dir))
+        # Short History
+        plots.short_history(self.logger, "{0}/history_short.png".format(self.save_dir))
 
     def save(self, save_dir):
         #         for saving and loading see:
