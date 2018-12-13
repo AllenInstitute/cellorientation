@@ -1,11 +1,11 @@
 import anndata
 import pandas as pd
-import torch
-from torch.utils.data.dataset import Dataset
-from torch import Tensor
 from collections import Iterable
 from ..utils.dataloader import default_collate
 from typing import Dict, List, Union, Mapping, Any
+from torch import Tensor, from_numpy, cat
+from torch.utils.data.dataset import Dataset
+
 
 
 class GSDatasetVarMismatchError(Exception):
@@ -16,10 +16,10 @@ class GSDatasetVarMismatchError(Exception):
 class GSDataset(Dataset):
     def __init__(
         self,
-        X: Tensor=torch.zeros(1, 1),
-        obs: pd.DataFrame=pd.DataFrame([0]),
-        var: pd.DataFrame=pd.DataFrame([0]),
-        uns: Mapping[Any, Any]={}
+        X: Tensor = Tensor([[0]]),
+        obs: pd.DataFrame = pd.DataFrame([0]),
+        var: pd.DataFrame = pd.DataFrame([0]),
+        uns: Mapping[Any, Any] = {}
     ):
         """
         A data provider class for the larger project. The idea is to capture an AnnData and then
@@ -63,7 +63,7 @@ class GSDataset(Dataset):
         if not self.var.equals(other.var):
             raise GSDatasetVarMismatchError
         return GSDataset(
-            X=torch.cat([self.X, other.X]),
+            X=cat([self.X, other.X]),
             obs=pd.concat([self.obs, other.obs]),
             var=self.var,
             uns={**self.uns, **other.uns},
@@ -72,5 +72,5 @@ class GSDataset(Dataset):
 
 def gsdataset_from_anndata(adata: anndata.AnnData) -> GSDataset:
     return GSDataset(
-        X=torch.from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
+        X=from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
     )
