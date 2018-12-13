@@ -34,4 +34,7 @@ install:
   - pip install -e .
 
 script:
-  - pytest -v geneselection/tests
+  - pytest --cov-report xml --cov geneselection -v geneselection/tests
+
+after_success:
+  - codecov
