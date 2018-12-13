@@ -1,19 +1,12 @@
 import pytest
-import scanpy.api as sc
 import geneselection.datasets.dataset as gds
+from .create_h5ad import CreateH5ad
 
-
-class TestData(object):
+class StubData(object):
     def __init__(self):
-        self.dstruct = sc.read('geneselection/tests/fixture_data/gene5RowTestData.h5ad')
-        #row_two is the first 50 values in row 2
-        self.row_two = [6.0664206, 0.81761986, 2.221718, 0.81761986, 6.0939155, 0.0, 0.49014387, 1.2613558,
-                        6.1151004, 1.2613558, 1.6915445, 0.0, 1.0639012, 0.49014387, 1.9913629, 0.49014387,
-                        4.1726575, 0.81761986, 0.0, 0.49014387, 0.81761986, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.46414,
-                        0.49014387, 0.81761986, 1.2613558, 2.7024426, 2.4088187, 0.0, 2.9291346, 1.8017772, 2.9623814,
-                        0.0, 3.755331, 1.4261773, 1.2613558, 0.49014387, 0.81761986, 0.0, 1.6915445, 0.49014387,
-                        0.81761986, 1.6915445, 1.4261773, 3.9914677]
-        self.len_row_two = 50
+        self.rows = 5
+        self.columns = 38270
+        self.dstruct = CreateH5ad(rows=self.rows, columns=self.columns)
 
     def get_annData(self):
         return self.dstruct
@@ -21,13 +14,13 @@ class TestData(object):
 
 @pytest.fixture
 def rna_seq():
-    return TestData()
+    return StubData()
 
 
 def test_len(rna_seq):
     ad = rna_seq.get_annData()
     ds = gds.gsdataset_from_anndata(ad)
-    assert len(ds) == 5
+    assert len(ds) == rna_seq.rows
 
 
 def test_access(rna_seq):
@@ -35,7 +28,7 @@ def test_access(rna_seq):
     ds = gds.gsdataset_from_anndata(ad)
     kval = ds[2]
     row = kval['X']
-    assert len(row) == 38270
+    assert len(row) == rna_seq.columns
 
 
 def test_row(rna_seq):
@@ -43,7 +36,7 @@ def test_row(rna_seq):
     ds = gds.gsdataset_from_anndata(ad)
     kval = ds[2]
     row = kval['X']
-    for i in range(rna_seq.len_row_two):
-        assert row[i] == rna_seq.row_two[i]
+    for i in range(rna_seq.columns):
+        assert float(row[i]) == rna_seq.dstruct.X[2, i]
 
 

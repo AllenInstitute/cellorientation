@@ -3,7 +3,7 @@ import pandas as pd
 from collections import Iterable
 from ..utils.dataloader import default_collate
 from typing import Dict, List, Union, Mapping, Any
-from torch import Tensor, from_numpy
+from torch import Tensor, from_numpy, cat
 from torch.utils.data.dataset import Dataset
 
 
@@ -63,7 +63,7 @@ class GSDataset(Dataset):
         if not self.var.equals(other.var):
             raise GSDatasetVarMismatchError
         return GSDataset(
-            X=torch.cat([self.X, other.X]),
+            X=cat([self.X, other.X]),
             obs=pd.concat([self.obs, other.obs]),
             var=self.var,
             uns={**self.uns, **other.uns},
