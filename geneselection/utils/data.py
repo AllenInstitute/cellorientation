@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 import requests
 from sklearn.model_selection import train_test_split
@@ -47,3 +48,8 @@ def write_splits(
         for split, adata in split_adata_dict.items():
             adata_filename = "{0}_{1}.h5ad".format(basename, split)
             adata.write(os.path.join(out_dir, adata_filename))
+
+
+def tidy(arr):
+    """Take a numpy ndarray and turn it into a tidy dataframe."""
+    return pd.DataFrame([(*inds, arr[inds]) for inds in np.ndindex(arr.shape)])
