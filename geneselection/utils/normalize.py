@@ -13,7 +13,7 @@ def log_and_zscore(adata):
     sc.pp.scale(adata)
 
 
-def normpercell_and_log_and_zscore(adata):
+def percellcounts_and_log_and_zscore(adata):
     """
     normalizes adata.X in place.
     takes an andata with X as raw counts and appliees the following funcitons to X in succession:
