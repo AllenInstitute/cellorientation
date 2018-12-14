@@ -12,7 +12,7 @@ def history(
     simple_logger,
     save_path,
     loss_name="recon_loss",
-    do_not_print=["epoch", "iter", "time", "z"],
+    do_not_print=["epoch", "iter", "time", "z", "z_train", "z_valid"],
 ):
 
     # Figure out the default color order, and use these for the plots
@@ -62,6 +62,10 @@ def history(
     if i > 1:
         ax_max = np.percentile(np.hstack(y_vals), 99.5)
         ax_min = np.percentile(np.hstack(y_vals), 0)
+
+        if ax_max == np.inf:
+            y_vals_tmp = np.hstack(y_vals)
+            ax_min = y_vals_tmp[y_vals_tmp < np.inf][0]
 
         ax2.set_ylim([ax_min, ax_max])
 
