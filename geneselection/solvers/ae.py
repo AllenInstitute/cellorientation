@@ -3,6 +3,7 @@ from ..simplelogger import SimpleLogger
 
 from . import basic_net_trainer
 from .. import utils
+from ..utils import plots
 
 import os
 import pickle
@@ -14,7 +15,8 @@ class Model(basic_net_trainer.Model):
         self,
         net,
         opt,
-        dataloader,
+        dataloader_train,
+        dataloader_validate,
         loss,
         gpu_ids,
         save_dir,
@@ -24,9 +26,15 @@ class Model(basic_net_trainer.Model):
     ):
 
         super(Model, self).__init__(
-            dataloader, n_epochs, gpu_ids, save_dir, save_state_iter, save_progress_iter
+            dataloader=dataloader_train,
+            n_epochs=n_epochs,
+            gpu_ids=gpu_ids,
+            save_dir=save_dir,
+            save_state_iter=save_state_iter,
+            save_progress_iter=save_progress_iter,
         )
 
+        self.dataloader_validate = dataloader_validate
         self.net = net
         self.opt = opt
         self.loss = loss
@@ -69,12 +77,16 @@ class Model(basic_net_trainer.Model):
         return log
 
     def save_progress(self):
-        #         gpu_id = self.gpu_ids[0]
-        #         epoch = self.get_current_epoch()
-
-        #         data_provider = self.data_provider
-        #         net = self.net
-        pass
+        # History
+        plots.history(
+            self.logger, "{0}/history.png".format(self.save_dir), loss_name="recon_loss"
+        )
+        # Short History
+        plots.short_history(
+            self.logger,
+            "{0}/history_short.png".format(self.save_dir),
+            loss_name="recon_loss",
+        )
 
     def save(self, save_dir):
         #         for saving and loading see:
@@ -88,7 +100,7 @@ class Model(basic_net_trainer.Model):
         net_save_path = "{0}/net.pth".format(save_dir)
         net_save_path_final = "{0}/net_{1}.pth".format(save_dir, n_iters)
 
-        utils.save_state(self.net, self.opt, net_save_path, gpu_id)
+        utils.utils.save_state(self.net, self.opt, net_save_path, gpu_id)
         shutil.copyfile(net_save_path, net_save_path_final)
 
         pickle.dump(self.logger, open("{0}/logger.pkl".format(save_dir), "wb"))

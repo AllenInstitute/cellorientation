@@ -2,7 +2,11 @@ import importlib
 import json
 import os
 import sys
+import torch
 import torch.optim
+import geneselection.utils as utils
+from geneselection.datasets.dataset import gsdataset_from_anndata
+import numpy as np
 
 
 def run(
@@ -20,19 +24,36 @@ def run(
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(ID) for ID in gpu_ids])
     gpu_ids = list(range(0, len(gpu_ids)))
 
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+
     if len(gpu_ids) == 1:
         torch.backends.cudnn.enabled = True
         torch.backends.cudnn.benchmark = True
 
     # load the dataloader
-    dataset_module = importlib.import_module(dataset_kwargs["name"])
-    dataset = dataset_module.load(**dataset_kwargs["kwargs"])
+    anndataset_module = importlib.import_module(dataset_kwargs["name"])
+    anndata = anndataset_module.load(**dataset_kwargs["kwargs"])
 
+    _, anndata_splits = utils.data.split_anndata(
+        anndata, test_size=0.2, random_state=seed
+    )
+
+    ds_train = gsdataset_from_anndata(anndata_splits["train"])
+    ds_validate = gsdataset_from_anndata(anndata_splits["test"])
+
+    # train split
     data_loader_module, data_loader_name = data_loader_kwargs["name"].rsplit(".", 1)
     data_loader_module = importlib.import_module(data_loader_module)
-    dataloader = getattr(data_loader_module, data_loader_name)(
-        dataset, **data_loader_kwargs["kwargs"]
-    )
+    dataloader = getattr(data_loader_module, data_loader_name)
+    dataloader_train = dataloader(ds_train, **data_loader_kwargs["kwargs"])
+
+    # validate split
+    data_loader_kwargs["kwargs"]["shuffle"] = False
+    data_loader_kwargs["kwargs"]["drop_last"] = True
+
+    dataloader_validate = dataloader(ds_validate, **data_loader_kwargs["kwargs"])
 
     # load the networks
     network_module, network_name = network_kwargs["name"].rsplit(".", 1)
@@ -56,7 +77,8 @@ def run(
     # load the trainer model
     trainer_module = importlib.import_module(trainer_kwargs["name"])
     trainer = trainer_module.Model(
-        dataloader=dataloader,
+        dataloader_train=dataloader_train,
+        dataloader_validate=dataloader_validate,
         net=network,
         opt=opt,
         loss=loss,
