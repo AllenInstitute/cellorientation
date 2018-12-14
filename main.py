@@ -3,6 +3,7 @@ import os
 import importlib
 import argparse
 import datetime
+import subprocess
 
 if __name__ == "__main__":
 
@@ -39,9 +40,14 @@ if __name__ == "__main__":
         with open(args["kwargs_path"], "rb") as f:
             args["kwargs"] = json.load(f)
 
+    args["git_commit"] = str(subprocess.check_output(["git", "rev-parse", "HEAD"]))
+
     args_path = "{0}/input.json".format(args["save_dir"])
     with open(args_path, "w") as f:
         json.dump(args, f, indent=4, sort_keys=True)
+
+    if "git_commit" in args:
+        args.pop("git_commit")
 
     # load whatever function you want to run
     main_function = importlib.import_module(args["main_function"])
