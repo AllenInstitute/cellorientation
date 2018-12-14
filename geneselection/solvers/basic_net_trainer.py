@@ -58,15 +58,12 @@ class Model(object):
         epoch_next = self.get_current_epoch(self.get_current_iter())
 
         saved = False
-        if epoch != epoch_next and (
-            (epoch_next % self.save_state_iter) == 0
-            or (epoch_next % self.save_state_iter) == 0
-        ):
+        if epoch != epoch_next:
             if (epoch_next % self.save_progress_iter) == 0:
                 print("saving progress")
                 self.save_progress()
 
-            if (epoch_next % self.save_progress_iter) == 0:
+            if (epoch_next % self.save_state_iter) == 0:
                 print("saving state")
                 self.save(self.save_dir)
 
