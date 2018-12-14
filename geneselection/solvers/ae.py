@@ -45,7 +45,8 @@ class Model(basic_net_trainer.Model):
             self.logger = pickle.load(open(logger_path, "rb"))
         else:
             print_str = (
-                "[{epoch:d}][{iter:d}] reconLoss: {recon_loss:.8f} time: {time:.2f}"
+                "[{epoch:d}][{iter:d}] trainLoss: {train_loss:.8f} validLoss: {valid_loss:.8f} time: {time:.2f}"
+                # "[{epoch:d}][{iter:d}] trainLoss: {train_loss:.8f} time: {time:.2f}"
             )
 
             self.logger = SimpleLogger(print_str)
@@ -67,25 +68,40 @@ class Model(basic_net_trainer.Model):
         x = mb["X"].cuda(gpu_id)
 
         opt.zero_grad()
-        x_hat, z = net(x)
-        recon_loss = loss(x_hat, x)
-        recon_loss.backward()
+        x_hat, z_train = net(x)
+        train_loss = loss(x_hat, x)
+        train_loss.backward()
         opt.step()
 
-        log = {"recon_loss": recon_loss.item(), "z": z.cpu().detach().numpy()}
+        # Validation results
+        _, mb = next(enumerate(self.dataloader_validate))
+        x = mb["X"].cuda(gpu_id)
+
+        net.train(False)
+        with torch.no_grad():
+            x_hat, z_valid = net(x)
+
+        valid_loss = loss(x_hat, x)
+
+        log = {
+            "train_loss": train_loss.item(),
+            "z_train": z_train.cpu().detach().numpy(),
+            "valid_loss": valid_loss.item(),
+            "z_valid": z_valid.cpu().detach().numpy(),
+        }
 
         return log
 
     def save_progress(self):
         # History
         plots.history(
-            self.logger, "{0}/history.png".format(self.save_dir), loss_name="recon_loss"
+            self.logger, "{0}/history.png".format(self.save_dir), loss_name="train_loss"
         )
         # Short History
         plots.short_history(
             self.logger,
             "{0}/history_short.png".format(self.save_dir),
-            loss_name="recon_loss",
+            loss_name="train_loss",
         )
 
     def save(self, save_dir):
