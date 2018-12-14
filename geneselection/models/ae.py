@@ -1,5 +1,5 @@
 import torch.nn as nn
-from ..utils import get_activation
+from ..utils.utils import get_activation
 
 
 class BasicLayer(nn.Module):
@@ -23,6 +23,7 @@ class Enc(nn.Module):
         self.main = nn.Sequential(
             BasicLayer(n_in, 1024),
             BasicLayer(1024, 512),
+            BasicLayer(512, 512),
             nn.Linear(512, n_latent, bias=False),
         )
 
@@ -36,6 +37,7 @@ class Dec(nn.Module):
 
         self.main = nn.Sequential(
             BasicLayer(n_latent, 512),
+            BasicLayer(512, 512),
             BasicLayer(512, 1024),
             nn.Linear(1024, n_out, bias=False),
         )

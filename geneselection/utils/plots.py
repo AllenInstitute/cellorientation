@@ -1,12 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+plt.switch_backend("agg")
+
 dpi = 100
 figx = 6
 figy = 4.5
 
 
-def history(logger, save_path, loss_name="reconLoss"):
+def history(
+    simple_logger,
+    save_path,
+    loss_name="recon_loss",
+    do_not_print=["epoch", "iter", "time", "z"],
+):
 
     # Figure out the default color order, and use these for the plots
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
@@ -19,18 +26,21 @@ def history(logger, save_path, loss_name="reconLoss"):
 
     # Plot reconstruction loss
     plts += ax.plot(
-        logger.log["iter"], logger.log[loss_name], label=loss_name, color=colors[0]
+        simple_logger.log["iter"],
+        simple_logger.log[loss_name],
+        label=loss_name,
+        color=colors[0],
     )
 
     plt.ylabel(loss_name)
 
-    ax_max = np.percentile(logger.log[loss_name], 99)
-    ax_min = np.percentile(logger.log[loss_name], 0)
+    ax_max = np.percentile(simple_logger.log[loss_name], 99)
+    ax_min = np.percentile(simple_logger.log[loss_name], 0)
 
     ax.set_ylim([ax_min, ax_max])
 
     # Plot everything else that isn't below
-    do_not_print = ["epoch", "iter", "time", loss_name]
+    do_not_print += [loss_name]
 
     # Print off the reconLoss on it's own scale
     ax2 = plt.gca().twinx()
@@ -38,24 +48,28 @@ def history(logger, save_path, loss_name="reconLoss"):
     y_vals = list()
 
     i = 1
-    for field in logger.fields:
+    for field in simple_logger.log:
         if field not in do_not_print:
             plts += ax2.plot(
-                logger.log["iter"], logger.log[field], label=field, color=colors[i]
+                simple_logger.log["iter"],
+                simple_logger.log[field],
+                label=field,
+                color=colors[i],
             )
-            y_vals += logger.log[field]
+            y_vals += simple_logger.log[field]
             i += 1
 
-    ax_max = np.percentile(np.hstack(y_vals), 99.5)
-    ax_min = np.percentile(np.hstack(y_vals), 0)
+    if i > 1:
+        ax_max = np.percentile(np.hstack(y_vals), 99.5)
+        ax_min = np.percentile(np.hstack(y_vals), 0)
 
-    ax2.set_ylim([ax_min, ax_max])
+        ax2.set_ylim([ax_min, ax_max])
 
-    # Get all the labels for the legend from both axes
-    labs = [l.get_label() for l in plts]
+        # Get all the labels for the legend from both axes
+        labs = [l.get_label() for l in plts]
 
-    # Print legend
-    ax.legend(plts, labs)
+        # Print legend
+        ax.legend(plts, labs)
 
     plt.ylabel("loss")
     plt.title("History")
@@ -67,18 +81,20 @@ def history(logger, save_path, loss_name="reconLoss"):
     plt.close()
 
 
-def short_history(logger, save_path, max_history_len=10000, loss_name="reconLoss"):
-    history = int(len(logger.log["epoch"]) / 2)
+def short_history(
+    simple_logger, save_path, max_history_len=10000, loss_name="recon_loss"
+):
+    history = int(len(simple_logger.log["epoch"]) / 2)
 
     if history > max_history_len:
         history = max_history_len
 
-    x = logger.log["iter"][-history:]
-    y = logger.log[loss_name][-history:]
+    x = simple_logger.log["iter"][-history:]
+    y = simple_logger.log[loss_name][-history:]
 
-    epochs = np.floor(np.array(logger.log["epoch"][-history:]))
-    losses = np.array(logger.log[loss_name][-history:])
-    iters = np.array(logger.log["iter"][-history:])
+    epochs = np.floor(np.array(simple_logger.log["epoch"][-history:]))
+    losses = np.array(simple_logger.log[loss_name][-history:])
+    iters = np.array(simple_logger.log["iter"][-history:])
     uepochs = np.unique(epochs)
 
     epoch_losses = np.zeros(len(uepochs))
