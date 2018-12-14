@@ -65,7 +65,7 @@ def history(
 
         if ax_max == np.inf:
             y_vals_tmp = np.hstack(y_vals)
-            ax_min = y_vals_tmp[y_vals_tmp < np.inf][0]
+            ax_max = y_vals_tmp[y_vals_tmp < np.inf][0]
 
         ax2.set_ylim([ax_min, ax_max])
 
