@@ -9,9 +9,6 @@ cache:
   directories:
     - $HOME/miniconda
 
-before_cache:
-  - rm -rf $HOME/miniconda/envs/gsel
-
 before_install:
   - |
     URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
@@ -37,4 +34,5 @@ script:
   - pytest --cov-report xml --cov geneselection -v geneselection/tests
 
 after_success:
-  - codecov
+  - codecov -v
+  - rm -rf $HOME/miniconda/envs/gsel
