@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 
 plt.switch_backend("agg")
 
@@ -10,12 +11,19 @@ figy = 4.5
 
 def history(
     simple_logger,
-    save_path,
-    loss_name="recon_loss",
-    do_not_print=["epoch", "iter", "time", "z", "z_train", "z_valid"],
+    save_path=None,
+    loss_ax1=["recon_loss"],
+    loss_ax2=[],
+    percentile_max=95,
+    percentile_min=0,
+    history_len=None,
 ):
 
     # Figure out the default color order, and use these for the plots
+
+    if history_len is None:
+        history_len = len(simple_logger)
+
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     plt.figure(figsize=(figx, figy), dpi=dpi)
@@ -23,49 +31,61 @@ def history(
     ax = plt.gca()
 
     plts = list()
+    losses = list()
+    i = 0
 
-    # Plot reconstruction loss
-    plts += ax.plot(
-        simple_logger.log["iter"],
-        simple_logger.log[loss_name],
-        label=loss_name,
-        color=colors[0],
-    )
+    for loss_name in loss_ax1:
+        # Plot reconstruction loss
+        losses += [simple_logger.log[loss_name][-history_len:]]
+
+        plts += ax.plot(
+            simple_logger.log["iter"][-history_len:],
+            simple_logger.log[loss_name][-history_len:],
+            label=loss_name,
+            color=colors[i],
+        )
+        i += 1
 
     plt.ylabel(loss_name)
 
-    ax_max = np.percentile(simple_logger.log[loss_name], 99)
-    ax_min = np.percentile(simple_logger.log[loss_name], 0)
+    losses = np.hstack(losses)
+
+    ax_max = np.percentile(losses, percentile_max)
+    ax_min = np.percentile(losses, percentile_min)
+
+    if ax_max == np.inf:
+        y_vals_tmp = np.sort(losses)
+        ax_max = y_vals_tmp[y_vals_tmp < np.inf][-1]
 
     ax.set_ylim([ax_min, ax_max])
 
-    # Plot everything else that isn't below
-    do_not_print += [loss_name]
-
     # Print off the reconLoss on it's own scale
-    ax2 = plt.gca().twinx()
 
-    y_vals = list()
+    if len(loss_ax2) > 1:
+        ax2 = plt.gca().twinx()
+        losses = list()
 
-    i = 1
-    for field in simple_logger.log:
-        if field not in do_not_print:
-            plts += ax2.plot(
-                simple_logger.log["iter"],
-                simple_logger.log[field],
-                label=field,
+        for loss_name in loss_ax2:
+            # Plot reconstruction loss
+            losses += [simple_logger.log[loss_name][-history_len:]]
+
+            plts += ax.plot(
+                simple_logger.log["iter"][-history_len:],
+                simple_logger.log[loss_name][-history_len:],
+                label=loss_name,
                 color=colors[i],
             )
-            y_vals += simple_logger.log[field]
+
             i += 1
 
-    if i > 1:
-        ax_max = np.percentile(np.hstack(y_vals), 99.5)
-        ax_min = np.percentile(np.hstack(y_vals), 0)
+        losses = np.hstack(losses)
+
+        ax_max = np.percentile(losses, percentile_max)
+        ax_min = np.percentile(losses, percentile_min)
 
         if ax_max == np.inf:
-            y_vals_tmp = np.hstack(y_vals)
-            ax_max = y_vals_tmp[y_vals_tmp < np.inf][0]
+            y_vals_tmp = np.sort(losses)
+            ax_max = y_vals_tmp[y_vals_tmp < np.inf][-1]
 
         ax2.set_ylim([ax_min, ax_max])
 
@@ -81,57 +101,146 @@ def history(
 
     # Save
     plt.tight_layout()
-    plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
-    plt.close()
+    if save_path is not None:
+        plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
+        plt.close()
 
 
-def short_history(
-    simple_logger, save_path, max_history_len=10000, loss_name="recon_loss"
+def PCA_explained_variance(model_pca, save_path, n_dims_cutoff=30):
+    # takes in a sklearn pca model object
+
+    if n_dims_cutoff is None:
+        n_dims_cutoff = -1
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(figx, figy))
+
+    dim_var = model_pca.explained_variance_ratio_
+    dim_var_cumulative = np.cumsum(dim_var)
+
+    ax1.plot(dim_var[0:n_dims_cutoff], color="k")
+    ax1.set_xlabel("dimension #")
+    ax1.set_ylabel("dimension variation")
+    ax1.set_ylim(0, 1.05)
+
+    ax2.plot(dim_var_cumulative[0:n_dims_cutoff], color="k")
+    ax2.set_xlabel("dimension #")
+    ax2.set_ylabel("cumulative variation")
+
+    fig.tight_layout()
+
+    if save_path is not None:
+        plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
+        plt.close()
+
+
+def PCA_dims_multi_y(
+    model_pca, save_path_format, X, Y_dict, dims=[0, 1], show_legend=True
 ):
-    history = int(len(simple_logger.log["epoch"]) / 2)
+    princomp = model_pca.transform(X)
 
-    if history > max_history_len:
-        history = max_history_len
+    for k in Y_dict:
+        Y = Y_dict[k]
 
-    x = simple_logger.log["iter"][-history:]
-    y = simple_logger.log[loss_name][-history:]
+        plt.figure()
 
-    epochs = np.floor(np.array(simple_logger.log["epoch"][-history:]))
-    losses = np.array(simple_logger.log[loss_name][-history:])
-    iters = np.array(simple_logger.log["iter"][-history:])
-    uepochs = np.unique(epochs)
+        scatter(princomp[:, dims[0]], princomp[:, dims[1]], Y)
 
-    epoch_losses = np.zeros(len(uepochs))
-    epoch_iters = np.zeros(len(uepochs))
-    i = 0
-    for uepoch in uepochs:
-        inds = np.equal(epochs, uepoch)
-        loss = np.mean(losses[inds])
-        epoch_losses[i] = loss
-        epoch_iters[i] = np.mean(iters[inds])
-        i += 1
+        ax = plt.gca()
+        ax.set_xlabel("pc {}".format(dims[0]))
+        ax.set_ylabel("pc {}".format(dims[1]))
 
-    mval = np.mean(losses)
+        plt.tight_layout()
 
-    plt.figure(figsize=(figx, figy), dpi=dpi)
-    plt.plot(x, y, label=loss_name)
-    plt.plot(epoch_iters, epoch_losses, color="darkorange", label="epoch avg")
-    plt.plot(
-        [np.min(iters), np.max(iters)],
-        [mval, mval],
-        color="darkorange",
-        linestyle=":",
-        label="window avg",
-    )
+        if show_legend:
+            ax.legend(loc="upper right")
 
-    plt.legend()
-    plt.title("Short history")
-    plt.xlabel("iteration")
-    plt.ylabel("loss")
+        if save_path_format is not None:
+            plt.savefig(save_path_format.format(k), bbox_inches="tight", dpi=dpi)
+            plt.close()
+
+
+def PCA_dims(model_pca, save_path, X, Y=None, dims=[0, 1], top_n_contributers=10):
+    # takes in a sklearn pca model object
+
+    princomp = model_pca.transform(X)
+
+    plt.figure()
+
+    scatter(princomp[:, dims[0]], princomp[:, dims[1]], Y)
+
+    ax = plt.gca()
+    ax.set_xlabel("pc {}".format(dims[0]))
+    ax.set_ylabel("pc {}".format(dims[1]))
 
     plt.tight_layout()
-    plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
-    plt.close()
+
+    if save_path is not None:
+        plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
+        plt.close()
+
+
+def scatter(x1, x2, Y):
+
+    if Y is None:
+        Y = np.ones(x1.shape[0])
+
+    uY = np.unique(Y)
+    colors = cm.viridis(np.linspace(0, 1, len(uY)))
+
+    for i, y in enumerate(uY):
+
+        inds = Y == y
+
+        plt.scatter(x1[inds], x2[inds], s=10, color=colors[i], label=y)
+
+
+# def short_history(
+#     simple_logger, save_path, max_history_len=10000, loss_name="recon_loss"
+# ):
+#     history = int(len(simple_logger.log["epoch"]) / 2)
+
+#     if history > max_history_len:
+#         history = max_history_len
+
+#     x = simple_logger.log["iter"][-history:]
+#     y = simple_logger.log[loss_name][-history:]
+
+#     epochs = np.floor(np.array(simple_logger.log["epoch"][-history:]))
+#     losses = np.array(simple_logger.log[loss_name][-history:])
+#     iters = np.array(simple_logger.log["iter"][-history:])
+#     uepochs = np.unique(epochs)
+
+#     epoch_losses = np.zeros(len(uepochs))
+#     epoch_iters = np.zeros(len(uepochs))
+#     i = 0
+#     for uepoch in uepochs:
+#         inds = np.equal(epochs, uepoch)
+#         loss = np.mean(losses[inds])
+#         epoch_losses[i] = loss
+#         epoch_iters[i] = np.mean(iters[inds])
+#         i += 1
+
+#     mval = np.mean(losses)
+
+#     plt.figure(figsize=(figx, figy), dpi=dpi)
+#     plt.plot(x, y, label=loss_name)
+#     plt.plot(epoch_iters, epoch_losses, color="darkorange", label="epoch avg")
+#     plt.plot(
+#         [np.min(iters), np.max(iters)],
+#         [mval, mval],
+#         color="darkorange",
+#         linestyle=":",
+#         label="window avg",
+#     )
+
+#     plt.legend()
+#     plt.title("Short history")
+#     plt.xlabel("iteration")
+#     plt.ylabel("loss")
+
+#     plt.tight_layout()
+#     plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
+#     plt.close()
 
 
 # def embeddings(embedding, save_path):
