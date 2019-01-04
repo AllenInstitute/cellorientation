@@ -20,6 +20,7 @@ def run(
     save_dir,
     gpu_ids,
     seed=0,
+    transform_method=None,
 ):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(ID) for ID in gpu_ids])
@@ -63,6 +64,10 @@ def run(
     ds_train = gsdataset_from_anndata(anndata_splits["train"])
     ds_validate = gsdataset_from_anndata(anndata_splits["test"])
 
+    ds_train, ds_validate = utils.data.transform(
+        ds_train, ds_validate, transform_method
+    )
+
     # train split
     data_loader_module, data_loader_name = data_loader_train_kwargs["name"].rsplit(
         ".", 1
@@ -80,6 +85,12 @@ def run(
     dataloader_validate = dataloader(
         ds_validate, **data_loader_validate_kwargs["kwargs"]
     )
+
+    #     scheduler = None
+    # if args.use_scheduler:
+    #     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    #         optimizer, "max", factor=0.1, patience=10, verbose=True, threshold=0.0001
+    #     )
 
     # load the trainer model
     trainer_module = importlib.import_module(trainer_kwargs["name"])
