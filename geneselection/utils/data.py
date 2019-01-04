@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 import requests
 from sklearn.model_selection import train_test_split
+import sklearn.preprocessing as preprocessing
 
 
 def download_file(url, loc="data_files", blocksize=1000000):
@@ -53,3 +54,31 @@ def write_splits(
 def tidy(arr):
     """Take a numpy ndarray and turn it into a tidy dataframe."""
     return pd.DataFrame([(*inds, arr[inds]) for inds in np.ndindex(arr.shape)])
+
+
+def transform(ds_train, ds_validate, method=None):
+    """Method can be None, 'none', 'log', 'zscore', 'box-cox'"""
+    if method is None or method == "none":
+        pass  # do nothing
+
+    elif method == "log":
+        ds_train.X = np.log(ds_train.X + 1)
+        ds_validate.X = np.log(ds_validate.X + 1)
+
+    elif method == "box-cox":
+        ds_train.X = preprocessing.power_transform(ds_train.X + 1)
+        ds_validate.X = preprocessing.power_transform(ds_validate.X + 1)
+
+    elif method == "zscore":
+        X = ds_train.X
+
+        mu = np.mean(X, axis=0)
+        std = np.std(X, axis=0)
+
+        ds_train.X = (X - mu) / std
+        ds_validate.X = (ds_validate.X - mu) / std
+
+    else:
+        raise ValueError("method value of {} is not supported".format(method))
+
+    return ds_train, ds_validate
