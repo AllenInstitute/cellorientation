@@ -5,7 +5,7 @@ from ..utils.data import split_anndata, write_splits
 
 def load(
     split="train",
-    original_fpath="/allen/aics/modeling/data/scRNAseq_SeeligCollaboration/data_for_modeling/scrnaseq_cardio_20181129_train.h5ad",
+    original_fpath="/allen/aics/modeling/data/scRNAseq_SeeligCollaboration/data_for_modeling/scrnaseq_cardio_20181129.h5ad",
     cache_dir="data_cache",
     cache=True,
 ):
