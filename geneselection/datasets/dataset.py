@@ -7,9 +7,9 @@ from torch import Tensor, from_numpy, cat
 from torch.utils.data.dataset import Dataset
 
 
-
 class GSDatasetVarMismatchError(Exception):
     """Exception for when asked to merge 2 GSDatasets with different var classes (columns)"""
+
     pass
 
 
@@ -19,7 +19,7 @@ class GSDataset(Dataset):
         X: Tensor = Tensor([[0]]),
         obs: pd.DataFrame = pd.DataFrame([0]),
         var: pd.DataFrame = pd.DataFrame([0]),
-        uns: Mapping[Any, Any] = {}
+        uns: Mapping[Any, Any] = {},
     ):
         """
         A data provider class for the larger project. The idea is to capture an AnnData and then
@@ -50,16 +50,18 @@ class GSDataset(Dataset):
         """
         X = self.X[idx]
         obs = self.obs.iloc[[idx]]
-        return dict(X=X, obs=obs)
+        return dict(X=X, obs=obs, idx=idx)
 
-    def __getitem__(self, idx: Union[int, List]) -> Union[Dict[Tensor, pd.DataFrame], List[Dict[Tensor, pd.Series]]]:
+    def __getitem__(
+        self, idx: Union[int, List]
+    ) -> Union[Dict[Tensor, pd.DataFrame], List[Dict[Tensor, pd.Series]]]:
         return (
             default_collate([self._get_item(i) for i in idx])
             if (isinstance(idx, Iterable) and not isinstance(idx, str))
             else self._get_item(idx)
         )
 
-    def __add__(self, other: 'GSDataset'):
+    def __add__(self, other: "GSDataset"):
         if not self.var.equals(other.var):
             raise GSDatasetVarMismatchError
         return GSDataset(
@@ -71,6 +73,4 @@ class GSDataset(Dataset):
 
 
 def gsdataset_from_anndata(adata: anndata.AnnData) -> GSDataset:
-    return GSDataset(
-        X=from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
-    )
+    return GSDataset(X=from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns)
