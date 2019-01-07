@@ -23,6 +23,18 @@ class Model(nn.Module):
             ResidualLayer1d(n_in, n32, activation_last=None),
         )
 
+        def weights_init(m):
+            if isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.2)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.BatchNorm1d):
+                nn.init.normal_(m.weight, 0, 0.2)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+
+        self.main.apply(weights_init)
+
     def forward(self, x):
 
         # x = torch.cat(x, 1)
