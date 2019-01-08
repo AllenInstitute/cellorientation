@@ -58,6 +58,8 @@ def tidy(arr):
 
 def transform(ds_train, ds_validate, method=None):
     """Method can be None, 'none', 'log', 'zscore', 'box-cox'"""
+    transformer = None
+
     if method is None or method == "none":
         pass  # do nothing
 
@@ -66,19 +68,22 @@ def transform(ds_train, ds_validate, method=None):
         ds_validate.X = np.log(ds_validate.X + 1)
 
     elif method == "box-cox":
-        ds_train.X = preprocessing.power_transform(ds_train.X + 1)
-        ds_validate.X = preprocessing.power_transform(ds_validate.X + 1)
+        transformer = preprocessing.PowerTransformer("box-cox")
+
+        transformer.fit(ds_train.X + 1)
+
+        ds_train.X = transformer.transform(ds_train.X + 1)
+        ds_validate.X = transformer.transform(ds_validate.X + 1)
 
     elif method == "zscore":
-        X = ds_train.X
+        transformer = preprocessing.StandardScaler()
 
-        mu = np.mean(X, axis=0)
-        std = np.std(X, axis=0)
+        transformer.fit(ds_train.X)
 
-        ds_train.X = (X - mu) / std
-        ds_validate.X = (ds_validate.X - mu) / std
+        ds_train.X = transformer.transform(ds_train.X)
+        ds_validate.X = transformer.transform(ds_validate.X)
 
     else:
         raise ValueError("method value of {} is not supported".format(method))
 
-    return ds_train, ds_validate
+    return ds_train, ds_validate, transformer
