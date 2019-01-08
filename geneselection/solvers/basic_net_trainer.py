@@ -90,5 +90,4 @@ class Model(object):
             log["time"] = deltaT
 
             self.logger.add(log)
-
             self.maybe_save()
