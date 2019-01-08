@@ -9,6 +9,9 @@ import os
 import pickle
 import shutil
 
+import numpy as np
+import time
+
 
 class Model(basic_net_trainer.Model):
     def __init__(
@@ -156,3 +159,62 @@ class Model(basic_net_trainer.Model):
         shutil.copyfile(net_save_path, net_save_path_final)
 
         pickle.dump(self.logger, open("{0}/logger.pkl".format(save_dir), "wb"))
+
+    def get_errors(self):
+        net = self.net
+        loss = self.loss
+        gpu_id = self.gpu_ids[0]
+
+        net.train(False)
+
+        save_out = {}
+        data_loader_names = ["train", "validate"]
+        data_loaders = [self.dataloader, self.dataloader_validate]
+
+        for name, loader in zip(data_loader_names, data_loaders):
+            index = []
+            x_hats = []
+            losses = []
+
+            for _, mb in enumerate(loader):
+
+                x = mb["X"].float().cuda(gpu_id)
+
+                with torch.no_grad():
+                    x_hat = net(x)
+
+                batch_loss = loss(x_hat, x)
+
+                index += [mb["idx"].numpy()]
+                x_hats += [x_hat.detach().cpu().numpy()]
+                losses += [batch_loss.item()]
+
+            save_out[name] = {}
+            save_out[name]["index"] = index
+            save_out[name]["x_hats"] = x_hats
+            save_out[name]["losses"] = losses
+
+        pickle.dump(save_out, open("{0}/errors.pkl".format(self.save_dir), "wb"))
+
+    def train(self):
+        start_iter = self.get_current_iter()
+
+        for this_iter in range(
+            int(start_iter), int(np.ceil(self.iters_per_epoch) * self.n_epochs)
+        ):
+
+            start = time.time()
+
+            log = self.iteration()
+
+            stop = time.time()
+            deltaT = stop - start
+
+            log["epoch"] = self.get_current_epoch()
+            log["iter"] = self.get_current_iter()
+            log["time"] = deltaT
+
+            self.logger.add(log)
+            self.maybe_save()
+
+        self.get_errors()
