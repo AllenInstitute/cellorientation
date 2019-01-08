@@ -7,6 +7,7 @@ import torch.optim
 import geneselection.utils as utils
 from geneselection.datasets.dataset import gsdataset_from_anndata
 import numpy as np
+import pickle
 
 
 def run(
@@ -64,9 +65,10 @@ def run(
     ds_train = gsdataset_from_anndata(anndata_splits["train"])
     ds_validate = gsdataset_from_anndata(anndata_splits["test"])
 
-    ds_train, ds_validate = utils.data.transform(
+    ds_train, ds_validate, transformer = utils.data.transform(
         ds_train, ds_validate, transform_method
     )
+    pickle.dump(transformer, open("{0}/transform.pkl".format(save_dir), "wb"))
 
     # train split
     data_loader_module, data_loader_name = data_loader_train_kwargs["name"].rsplit(
