@@ -23,7 +23,7 @@ if __name__ == "__main__":
     kwargs["kwargs_path"] = args["kwargs_path"]
     kwargs["gpu_ids"] = args["gpu_ids"]
 
-    if kwargs["save_parent"] is not None:
+    if "save_parent" in kwargs:
         the_time = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         kwargs["save_dir"] = os.path.join(kwargs["save_parent"], the_time)
         kwargs.pop("save_parent")
