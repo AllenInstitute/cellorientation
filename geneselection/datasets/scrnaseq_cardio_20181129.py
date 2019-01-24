@@ -1,6 +1,8 @@
 import scanpy.api as sc
 import os
 from ..utils.data import split_anndata, write_splits
+import pandas as pd
+import numpy as np
 
 
 def load(
@@ -8,6 +10,8 @@ def load(
     original_fpath="/allen/aics/modeling/data/scRNAseq_SeeligCollaboration/data_for_modeling/scrnaseq_cardio_20181129.h5ad",
     cache_dir="data_cache",
     cache=True,
+    selected_genes_path=None,
+    threshold=0,
 ):
     """
     Load requested split of cardio data, where the whole dataset originated at original_fpath.
@@ -38,4 +42,18 @@ def load(
                 out_dir=cache_dir,
             )
 
-    return sc.read_h5ad(target_fpath)
+    adata = sc.read_h5ad(target_fpath)
+
+    if selected_genes_path is not None:
+        df = pd.read_csv(selected_genes_path, delimiter="\t")
+
+        coding_genes = df["Gene name"].unique()
+        coding_genes = [str(g) + "_HUMAN" for g in coding_genes]
+
+        cols = np.array([c for c in adata.var.index if c in coding_genes])
+        adata = adata[:, cols]
+
+    gene_nz_freq = (adata.X > 0).mean(axis=0)
+    adata = adata[:, cols[gene_nz_freq > threshold]]
+
+    return adata
