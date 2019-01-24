@@ -1,5 +1,13 @@
 import numpy as np
 import time
+import os
+from ..simplelogger import SimpleLogger
+import pickle
+import shutil
+
+import torch
+from .. import utils
+from ..utils import plots
 
 # This is the base class for trainers
 
@@ -32,7 +40,14 @@ class Model(object):
 
         self.iters_per_epoch = np.ceil(len(dataloader.dataset) / dataloader.batch_size)
 
-        self.zAll = list()
+        logger_path = "{}/logger.pkl".format(save_dir)
+
+        if os.path.exists(logger_path):
+            self.logger = pickle.load(open(logger_path, "rb"))
+        else:
+            print_str = "[{epoch:d}][{iter:d}] reconLoss: {recon_loss:.8f} validLoss: {valid_loss:.8f} time: {time:.2f}"
+
+            self.logger = SimpleLogger(print_str)
 
     def get_current_iter(self):
         return int(len(self.logger))
@@ -44,13 +59,79 @@ class Model(object):
         return int(np.floor(iteration / self.iters_per_epoch))
 
     def save(self, save_dir):
-        raise NotImplementedError
+        save_dir = self.save_dir
+        gpu_id = self.gpu_ids[0]
+
+        n_iters = self.get_current_iter()
+
+        net_save_path = "{0}/net.pth".format(save_dir)
+        net_save_path_final = "{0}/net_{1}.pth".format(save_dir, n_iters)
+
+        utils.utils.save_state(self.net, self.opt, net_save_path, gpu_id)
+        shutil.copyfile(net_save_path, net_save_path_final)
+
+        pickle.dump(self.logger, open("{0}/logger.pkl".format(save_dir), "wb"))
 
     def save_progress(self):
-        raise NotImplementedError
+        # History
+        plots.history(
+            self.logger,
+            "{0}/history.png".format(self.save_dir),
+            loss_ax1=["recon_loss", "valid_loss"],
+        )
+        # Short History
+
+        history_len = int(len(self.logger) / 2)
+
+        if history_len > 10000:
+            history_len = 10000
+
+        plots.history(
+            self.logger,
+            "{0}/history_short.png".format(self.save_dir),
+            loss_ax1=["recon_loss", "valid_loss"],
+            history_len=history_len,
+        )
 
     def iteration(self):
-        raise NotImplementedError
+        torch.cuda.empty_cache()
+
+        gpu_id = self.gpu_ids[0]
+
+        net = self.net
+        opt = self.opt
+        loss = self.loss
+
+        # do this just incase anything upstream changes these values
+        net.train(True)
+
+        _, mb = next(enumerate(self.dataloader))
+        x = mb["X"].float().cuda(gpu_id)
+        y = mb["Y"].float().cuda(gpu_id)
+
+        opt.zero_grad()
+
+        y_hat = net(x)
+        recon_loss = loss(y_hat, y)
+
+        total_loss = recon_loss
+        total_loss.backward()
+        opt.step()
+
+        # Validation results
+        _, mb = next(enumerate(self.dataloader_validate))
+        x = mb["X"].float().cuda(gpu_id)
+        y = mb["Y"].float().cuda(gpu_id)
+
+        net.train(False)
+        with torch.no_grad():
+            y_hat = net(x)
+
+        valid_loss = loss(y_hat, y)
+
+        log = {"recon_loss": recon_loss.item(), "valid_loss": valid_loss.item()}
+
+        return log
 
     def maybe_save(self):
 
