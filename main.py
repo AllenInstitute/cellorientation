@@ -52,4 +52,5 @@ if __name__ == "__main__":
         kwargs.pop("gpu_ids")
 
     # run it
+    print(kwargs)
     main_function.run(**kwargs)
