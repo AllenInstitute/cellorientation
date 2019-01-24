@@ -18,20 +18,36 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    nvals = 501
-    lambda1_vals = np.linspace(0, 0.01, nvals)
-    lambda2_vals = np.linspace(0, 0.1, nvals)
+    nvals = 1001
+    search_params = {}
+    search_params["lambda1_vals"] = np.linspace(
+        0, 0.0005, nvals
+    ).tolist()  # should be closer to np.linspace(0, 0.001, nvals) for box-cox
+    search_params["lambda2_vals"] = [1]
+    search_params["w_init_vals"] = [1]
+    search_params["alpha1_vals"] = [1e-4, 1e-5, 1e-6]
+    search_params["alpha2_vals"] = [0]
 
-    # lambda_vals = [0.1, 0.001, 0.0001, 0.00001]
+    # save the search params to the parent directory
+    with open(args["kwargs_path"], "rb") as f:
+        kwargs = json.load(f)
+
+    if not os.path.exists(kwargs["save_parent"]):
+        os.makedirs(kwargs["save_parent"])
+
+    args_path = "{0}/search_params.json".format(kwargs["save_parent"])
+    with open(args_path, "w") as f:
+        json.dump(search_params, f, indent=4, sort_keys=True)
 
     for i in range(1000):
 
         np.random.seed(int(time.time()))
 
-        lambda1 = float(lambda1_vals[np.random.randint(len(lambda1_vals))])
-        lambda2 = float(lambda2_vals[np.random.randint(len(lambda2_vals))])
-        alpha1 = 1e-4
-        alpha2 = 0
+        lambda1 = float(np.random.choice(search_params["lambda1_vals"]))
+        lambda2 = float(np.random.choice(search_params["lambda2_vals"]))
+        alpha1 = float(np.random.choice(search_params["alpha1_vals"]))
+        alpha2 = float(np.random.choice(search_params["alpha2_vals"]))
+        w_init = float(np.random.choice(search_params["w_init_vals"]))
 
         if os.path.exists(args["kwargs_path"]):
             with open(args["kwargs_path"], "rb") as f:
@@ -44,6 +60,8 @@ if __name__ == "__main__":
         kwargs["trainer_kwargs"]["kwargs"]["lambda2"] = lambda2
         kwargs["trainer_kwargs"]["kwargs"]["alpha1"] = alpha1
         kwargs["trainer_kwargs"]["kwargs"]["alpha2"] = alpha2
+
+        kwargs["network_kwargs"]["kwargs"]["w_init"] = w_init
 
         the_time = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         kwargs["save_dir"] = os.path.join(kwargs["save_parent"], the_time)
