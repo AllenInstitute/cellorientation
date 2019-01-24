@@ -4,6 +4,7 @@ from collections import Iterable
 from ..utils.dataloader import default_collate
 from typing import Dict, List, Union, Mapping, Any
 from torch import Tensor, from_numpy, cat
+import torch
 from torch.utils.data.dataset import Dataset
 
 
@@ -20,6 +21,7 @@ class GSDataset(Dataset):
         obs: pd.DataFrame = pd.DataFrame([0]),
         var: pd.DataFrame = pd.DataFrame([0]),
         uns: Mapping[Any, Any] = {},
+        Y: Tensor = None,
     ):
         """
         A data provider class for the larger project. The idea is to capture an AnnData and then
@@ -31,10 +33,14 @@ class GSDataset(Dataset):
         """
         super(GSDataset, self).__init__()
 
+        if Y is None:
+            Y = torch.zeros([X.shape[0], 1])
+
         N, D = X.shape
-        assert N == len(obs) and D == len(var)
+        assert N == len(obs) and D == len(var) and N == Y.shape[0]
 
         self.X = X
+        self.Y = Y
         self.obs = obs
         self.var = var
         self.uns = uns
@@ -49,8 +55,9 @@ class GSDataset(Dataset):
         :return: dict(Tensor, DataFrame)
         """
         X = self.X[idx]
+        Y = self.Y[idx]
         obs = self.obs.iloc[[idx]]
-        return dict(X=X, obs=obs, idx=idx)
+        return dict(X=X, obs=obs, idx=idx, Y=Y)
 
     def __getitem__(
         self, idx: Union[int, List]
@@ -66,11 +73,18 @@ class GSDataset(Dataset):
             raise GSDatasetVarMismatchError
         return GSDataset(
             X=cat([self.X, other.X]),
+            Y=cat([self.Y, other.Y]),
             obs=pd.concat([self.obs, other.obs]),
             var=self.var,
             uns={**self.uns, **other.uns},
         )
 
 
-def gsdataset_from_anndata(adata: anndata.AnnData) -> GSDataset:
-    return GSDataset(X=from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns)
+def gsdataset_from_anndata(
+    adata: anndata.AnnData, subset_string: str = None
+) -> GSDataset:
+    gsdataset = GSDataset(
+        X=from_numpy(adata.X), obs=adata.obs, var=adata.var, uns=adata.uns
+    )
+
+    return gsdataset
