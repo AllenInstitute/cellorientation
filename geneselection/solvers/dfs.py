@@ -56,7 +56,7 @@ class Model(basic_net_trainer.Model):
         if os.path.exists(logger_path):
             self.logger = pickle.load(open(logger_path, "rb"))
         else:
-            print_str = "[{epoch:d}][{iter:d}] lambaLoss: {lambda_loss:0.8f} alphaLoss {alpha_loss:.8f} reconLoss: {recon_loss:.8f} validLoss: {valid_loss:.8f} time: {time:.2f}"
+            print_str = "[{epoch:d}][{iter:d}] lambaLoss: {lambda_loss:0.8f} alphaLoss {alpha_loss:.8f} |w|: {w_sum:.4f} reconLoss: {recon_loss:.8f} validLoss: {valid_loss:.8f} time: {time:.2f}"
 
             self.logger = SimpleLogger(print_str)
 
@@ -116,6 +116,7 @@ class Model(basic_net_trainer.Model):
             "alpha_loss": alpha_loss.item(),
             "valid_loss": valid_loss.item(),
             "weights_lambda": net.w.detach().cpu().numpy(),
+            "w_sum": np.sum(np.abs(net.w.detach().cpu().numpy())),
         }
 
         return log
