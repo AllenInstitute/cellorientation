@@ -64,8 +64,8 @@ def transform(ds_train, ds_validate, method=None):
         pass  # do nothing
 
     elif method == "log":
-        ds_train.X = np.log(ds_train.X + 1)
-        ds_validate.X = np.log(ds_validate.X + 1)
+        ds_train.X = np.log1p(ds_train.X)
+        ds_validate.X = np.log1p(ds_validate.X)
 
     elif method == "box-cox":
         transformer = preprocessing.PowerTransformer("box-cox")
@@ -82,6 +82,12 @@ def transform(ds_train, ds_validate, method=None):
 
         ds_train.X = transformer.transform(ds_train.X)
         ds_validate.X = transformer.transform(ds_validate.X)
+
+    elif method == "log_and_zscore":
+        ds_train, ds_validate, _ = transform(ds_train, ds_validate, method="log")
+        ds_train, ds_validate, transformer = transform(
+            ds_train, ds_validate, method="zscore"
+        )
 
     else:
         raise ValueError("method value of {} is not supported".format(method))
