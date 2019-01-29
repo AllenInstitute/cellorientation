@@ -25,3 +25,23 @@ def random_corr_mat(D=10, beta=1):
     for i in range(D):
         S[i, :] = S[i, p]
     return S
+
+
+def hub_spoke_corr_mat(D=50, groups=5, v=0.3, u=0.1):
+    """Port of data generation code from Wasserman's Huge package."""
+    from statsmodels.stats.moment_helpers import cov2corr
+
+    G = D // groups  # group size
+    Theta = np.zeros([D, D])
+
+    for g in range(groups):
+        for i in range(G):
+            Theta[g * G, g * G + i] = Theta[g * G + i, g * G] = 1
+
+    Theta[np.diag_indices(D)] = 0
+    Omega = Theta * v
+    Omega[np.diag_indices(D)] = np.abs(np.min(np.linalg.eigvals(Omega))) + 0.1 + u
+    Sigma = cov2corr(np.linalg.inv(Omega))
+    Omega = np.linalg.inv(Sigma)
+
+    return Omega, Sigma
