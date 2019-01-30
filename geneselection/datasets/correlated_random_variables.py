@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+import scanpy.api as sc
 
 
 def random_corr_mat(D=10, beta=1):
@@ -45,3 +47,38 @@ def hub_spoke_corr_mat(D=50, groups=5, v=0.3, u=0.1):
     Omega = np.linalg.inv(Sigma)
 
     return Omega, Sigma
+
+
+def hub_spoke_data(
+    n_samples=1000,
+    n_groups=5,
+    group_size=10,
+    n_singeltons=50,
+    off_diagonal_weight=0.3,
+    diagonal_weight=0.1,
+):
+    """generate samples from hub/spoke multivariate gaussian network"""
+
+    D_small = n_groups * group_size
+    _, Sigma_small = hub_spoke_corr_mat(
+        D=D_small, groups=n_groups, v=off_diagonal_weight, u=diagonal_weight
+    )
+
+    D = n_groups * group_size + n_singeltons
+    Sigma = np.eye(D, D)
+    Sigma[:D_small, :D_small] = Sigma_small
+
+    X = np.random.multivariate_normal(mean=np.zeros(D), cov=Sigma, size=n_samples)
+    var = pd.DataFrame(
+        {
+            "Type": (["hub"] + ["spoke"] * (group_size - 1)) * n_groups
+            + ["singleton"] * n_singeltons,
+            "Group": [
+                i for s in ([g + 1] * group_size for g in range(n_groups)) for i in s
+            ]
+            + [0] * n_singeltons,
+        }
+    )
+    adata = sc.AnnData(X=X, var=var)
+
+    return adata
