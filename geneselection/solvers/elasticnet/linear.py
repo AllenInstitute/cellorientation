@@ -6,8 +6,6 @@ import numpy as np
 from sklearn.preprocessing import scale
 from sklearn.linear_model import enet_path
 
-from .utils import get_selected_betas
-
 
 def worker(
     boot_inds,
@@ -35,7 +33,7 @@ def worker(
         X, y, l1_ratio=alpha, alphas=lambda_path, fit_intercept=False
     )
 
-    return {"beta": get_selected_betas(coefs_enet), "lambda_path": lambdas_enet}
+    return {"beta": coefs_enet != 0, "lambda_path": lambdas_enet}
 
 
 def parallel_runs(
