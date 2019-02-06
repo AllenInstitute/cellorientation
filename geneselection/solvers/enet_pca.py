@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.preprocessing import scale
 from sklearn.decomposition import PCA
 
+import glmnet_python  # noqa: F401
 from glmnet import glmnet
 
 from geneselection.utils.data import tidy
