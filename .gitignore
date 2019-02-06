@@ -3,6 +3,7 @@ data
 cache
 data_files/
 data_cache/
+scratch_files/
 *.h5ad
 *.csv
 *.mtx
