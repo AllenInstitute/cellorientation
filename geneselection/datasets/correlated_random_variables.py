@@ -54,8 +54,8 @@ def hub_spoke_data(
     n_groups=5,
     group_size=10,
     n_singeltons=50,
-    off_diagonal_weight=0.3,
-    diagonal_weight=0.1,
+    diagonal_weight=1 / np.e,
+    off_diagonal_weight=1,
 ):
     """generate samples from hub/spoke multivariate gaussian network"""
 
