@@ -1,3 +1,7 @@
+import numpy as np
+from scipy.stats import norm
+
+
 def kl_divergence(mu, logvar):
     batch_size = mu.size(0)
     assert batch_size != 0
@@ -13,3 +17,8 @@ def kl_divergence(mu, logvar):
     mean_kld = klds.mean(1).mean(0, True)
 
     return total_kld, dimension_wise_kld, mean_kld
+
+
+def mad(a, normalize=True, axis=0):
+    c = norm.ppf(3 / 4.) if normalize else 1
+    return np.median(np.abs(a - np.median(a, axis=axis)) / c, axis=axis)
