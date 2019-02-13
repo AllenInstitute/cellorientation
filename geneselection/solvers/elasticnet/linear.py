@@ -44,18 +44,8 @@ def parallel_runs(
     y_noise=0.5,
     alpha=0.9,
     lambda_path=np.geomspace(10, 0.01, num=10),
-    day_offset=0.1,
+    day_map={"D0": 0, "D12": 1, "D14": 1, "D24": 2, "D26": 2, "D93": 3, "D96": 3},
 ):
-
-    day_map = {
-        "D0": 0,
-        "D12": 1 - day_offset,
-        "D14": 1 + day_offset,
-        "D24": 2 - day_offset,
-        "D26": 2 + day_offset,
-        "D93": 3 - day_offset,
-        "D96": 3 + day_offset,
-    }
 
     boot_inds = [
         np.random.choice(len(adata.X), size=len(adata.X)) for _ in range(n_bootstraps)

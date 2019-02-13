@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pathlib
 
 from geneselection.utils.data import tidy
 
@@ -12,12 +13,15 @@ def preprocess_cardio(
     adata_in,
     nz_thresh=0.05,
     transform=np.arcsinh,
-    f_coding_genes="~/all_human_protein_genes_and_exons.txt",
+    f_coding_genes=pathlib.PurePath(
+        pathlib.Path(__file__).parent.resolve(), "Ensembl_protein_coding_genes.csv"
+    ),
+    suffix="_HUMAN",
 ):
 
     # load list of protein coding genes
-    df = pd.read_csv(f_coding_genes, delimiter="\t")
-    coding_genes = [str(g) + "_HUMAN" for g in df["Gene name"].unique()]
+    df = pd.read_csv(f_coding_genes)
+    coding_genes = [str(g) + suffix for g in df["Gene name"].unique()]
 
     # filter our data for only protein coding genes
     cols = np.array([c for c in adata_in.var.index if c in coding_genes])
