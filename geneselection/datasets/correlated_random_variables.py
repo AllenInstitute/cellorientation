@@ -88,3 +88,15 @@ class HubSpokeData:
             mean=np.zeros(len(self.Sigma)), cov=self.Sigma, size=n_samples
         )
         return sc.AnnData(X=X, var=self.var)
+
+
+class CorrelatedNormal:
+    def __init__(self, Sigma):
+
+        self.Sigma = Sigma
+
+    def sample(self, n_samples=1000):
+        X = np.random.multivariate_normal(
+            mean=np.zeros(len(self.Sigma)), cov=self.Sigma, size=n_samples
+        )
+        return sc.AnnData(X=X)
