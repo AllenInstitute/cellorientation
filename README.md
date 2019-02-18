@@ -1,6 +1,7 @@
 # Geneselection
 [![Build Status](https://www.travis-ci.com/AllenCellModeling/geneselection.svg?branch=master)](https://www.travis-ci.com/AllenCellModeling/geneselection)
 [![Documentation Status](https://readthedocs.org/projects/geneselection/badge/?version=latest)](https://geneselection.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/AllenCellModeling/geneselection/branch/master/graph/badge.svg)](https://codecov.io/gh/donovanr/plasticnet)
 
 ## Installation
 
