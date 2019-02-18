@@ -71,7 +71,7 @@ class Model(basic_net_trainer.Model):
 
         net = self.net
         opt = self.opt
-        loss = self.loss
+        #         loss = self.loss
 
         # do this just incase anything upstream changes these values
         net.train(True)
@@ -83,14 +83,13 @@ class Model(basic_net_trainer.Model):
 
         x_hat = net(x)
 
-        if self.masked_loss:
-            recon_loss = loss(x_hat, x, net.get_w_mask() == 0)
-        else:
-            recon_loss = loss(x_hat, x)
+        w = (1 - net.get_w()).expand_as(x)
+
+        recon_loss = torch.mean(torch.pow(x_hat - x, 2).mul(w))
 
         lambda_loss = self.lambda1 * (
-            (1 - self.lambda2) / 2 * torch.norm(net.w, 2)
-            + self.lambda2 * torch.norm(net.w, 1)
+            (1 - self.lambda2) / 2 * torch.norm(net.get_w(), 2)
+            + self.lambda2 * torch.norm(net.get_w(), 1)
         )
 
         weights = [
@@ -115,18 +114,23 @@ class Model(basic_net_trainer.Model):
         with torch.no_grad():
             x_hat = net(x)
 
-        if self.masked_loss:
-            valid_loss = loss(x_hat, x, net.get_w_mask() == 0)
+        w_mask = net.get_w_mask() == 0
+
+        x_hat_masked = torch.masked_select(x_hat, w_mask)
+        x_masked = torch.masked_select(x, w_mask)
+
+        if len(x_hat_masked) == 0:
+            valid_loss = torch.zeros(1).type_as(x)
         else:
-            valid_loss = loss(x_hat, x)
+            valid_loss = self.loss(x_hat_masked, x_masked)
 
         log = {
             "recon_loss": recon_loss.item(),
             "lambda_loss": lambda_loss.item(),
             "alpha_loss": alpha_loss.item(),
             "valid_loss": valid_loss.item(),
-            "weights_lambda": net.w.detach().cpu().numpy(),
-            "w_sum": np.sum(np.abs(net.w.detach().cpu().numpy())),
+            "weights_lambda": net.get_w().detach().cpu().numpy(),
+            "w_sum": np.sum(np.abs(net.get_w().detach().cpu().numpy())),
         }
 
         return log

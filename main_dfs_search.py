@@ -20,12 +20,12 @@ if __name__ == "__main__":
 
     nvals = 1001
     search_params = {}
-    search_params["lambda1_vals"] = np.linspace(
-        0, 0.0005, nvals
-    ).tolist()  # should be closer to np.linspace(0, 0.001, nvals) for box-cox
+    #     search_params["lambda1_vals"] = [1E-2, 5E-3, 1E-3, 5E-4, 1E-4, 5E-5, 1E-5, 5E-6, 1E-6,]
+    search_params["lambda1_vals"] = list(np.linspace(0, 1e-2, 10000))
     search_params["lambda2_vals"] = [1]
-    search_params["w_init_vals"] = [1]
-    search_params["alpha1_vals"] = [1e-4, 1e-5, 1e-6]
+
+    #     search_params["alpha1_vals"] = [1E-3, 5E-4, 1E-4, 5E-5, 1E-5]
+    search_params["alpha1_vals"] = [1e-4]
     search_params["alpha2_vals"] = [0]
 
     # save the search params to the parent directory
@@ -47,7 +47,6 @@ if __name__ == "__main__":
         lambda2 = float(np.random.choice(search_params["lambda2_vals"]))
         alpha1 = float(np.random.choice(search_params["alpha1_vals"]))
         alpha2 = float(np.random.choice(search_params["alpha2_vals"]))
-        w_init = float(np.random.choice(search_params["w_init_vals"]))
 
         if os.path.exists(args["kwargs_path"]):
             with open(args["kwargs_path"], "rb") as f:
@@ -60,8 +59,6 @@ if __name__ == "__main__":
         kwargs["trainer_kwargs"]["kwargs"]["lambda2"] = lambda2
         kwargs["trainer_kwargs"]["kwargs"]["alpha1"] = alpha1
         kwargs["trainer_kwargs"]["kwargs"]["alpha2"] = alpha2
-
-        kwargs["network_kwargs"]["kwargs"]["w_init"] = w_init
 
         the_time = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         kwargs["save_dir"] = os.path.join(kwargs["save_parent"], the_time)
