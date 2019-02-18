@@ -28,11 +28,14 @@ class MSELoss_masked(torch.nn.Module):
     def forward(self, x_hat, x_target, mask=None):
 
         if mask is None:
-            mask = torch.tensor(x_target.shape).type_as(x_target)
+            mask = torch.ones(x_target.shape).type_as(x_target)
 
-        err = self.loss(
-            torch.masked_select(x_hat, mask > 0),
-            torch.masked_select(x_target, mask > 0),
-        )
+        x_hat_masked = torch.masked_select(x_hat, mask > 0)
+        x_target_masked = torch.masked_select(x_target, mask > 0)
+
+        if len(x_hat_masked) == 0:
+            err = torch.zeros(1).type_as(x_target)
+        else:
+            err = self.loss(x_hat_masked, x_target_masked)
 
         return err
