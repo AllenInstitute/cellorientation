@@ -1,7 +1,7 @@
-# Geneselection
-[![Build Status](https://www.travis-ci.com/AllenCellModeling/geneselection.svg?branch=master)](https://www.travis-ci.com/AllenCellModeling/geneselection)
-[![Documentation Status](https://readthedocs.org/projects/geneselection/badge/?version=latest)](https://geneselection.readthedocs.io/en/latest/?badge=latest)
-[![codecov](https://codecov.io/gh/AllenCellModeling/geneselection/branch/master/graph/badge.svg)](https://codecov.io/gh/donovanr/plasticnet)
+# CellOrientation
+[![Build Status](https://www.travis-ci.com/AllenCellModeling/cellorientation.svg?branch=master)](https://www.travis-ci.com/AllenCellModeling/cellorientation)
+[![Documentation Status](https://readthedocs.org/projects/cellorientation/badge/?version=latest)](https://cellorientation.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/AllenCellModeling/cellorientation/branch/master/graph/badge.svg)](https://codecov.io/gh/donovanr/plasticnet)
 
 ## Installation
 
@@ -9,10 +9,10 @@ We use [Conda](https://conda.io/) to manage the development environment, with de
 If you don't have `conda` installed and set up for Python 3.x, install it using the instructions on their site, and then install this package with
 
 ```
-git clone git@github.com:AllenCellModeling/geneselection.git
-cd geneselection
+git clone git@github.com:AllenCellModeling/cellorientation.git
+cd cellorientation
 conda env create -f .environment.yml
-conda activate gsel
+conda activate cellorientation
 conda develop .
 pre-commit install
 ```

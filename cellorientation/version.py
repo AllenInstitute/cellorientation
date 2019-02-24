@@ -27,17 +27,17 @@ CLASSIFIERS = [
 ]
 
 # Description should be a one-liner:
-description = "geneselection: selects optimally representative genes"
+description = "cellorientation: determines how to allign cell images based on examples"
 # Long description will go up on the pypi page
 long_description = """
 
-Geneselection
+Cell Orientation
 ========
-Geneselection selects optimally representative genes.
+Cell Orientation: determines how to align cell images based on examples.
 
 License
 =======
-``geneselection`` is licensed under the terms of the MIT license. See the file
+``cellorientation`` is licensed under the terms of the MIT license. See the file
 "LICENSE" for information on the history of this software, terms & conditions
 for usage, and a DISCLAIMER OF ALL WARRANTIES.
 
@@ -46,20 +46,20 @@ All trademarks referenced herein are property of their respective holders.
 Copyright (c) 2018--, Rory Donovan-Maiye.
 """
 
-NAME = "geneselection"
-MAINTAINER = "Rory Donovan-Maiye"
-MAINTAINER_EMAIL = "donovanr@gmail.com"
+NAME = "cell_orientation"
+MAINTAINER = "Gregory R. Johnson"
+MAINTAINER_EMAIL = "gregj@alleninstitute.org"
 DESCRIPTION = description
 LONG_DESCRIPTION = long_description
-URL = "http://github.com/donovanr/geneselection"
+URL = "https://github.com/AllenInstitute/cell_orientation"
 DOWNLOAD_URL = ""
 LICENSE = "MIT"
-AUTHOR = "Rory Donovan-Maiye"
-AUTHOR_EMAIL = "donovanr@gmail.com"
+AUTHOR = "Gregory R. Johnson"
+AUTHOR_EMAIL = "gregj@alleninstitute.org"
 PLATFORMS = "OS Independent"
 MAJOR = _version_major
 MINOR = _version_minor
 MICRO = _version_micro
 VERSION = __version__
-PACKAGE_DATA = {"geneselection": [pjoin("data", "*")]}
+PACKAGE_DATA = {"cellorientation": [pjoin("data", "*")]}
 REQUIRES = ["numpy", "numba"]

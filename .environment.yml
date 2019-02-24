@@ -1,4 +1,4 @@
-name: gsel
+name: cellorientation
 channels:
   - pytorch
   - conda-forge
@@ -21,7 +21,7 @@ dependencies:
   - pytest
   - pytest-cov
   - python=3.6
-  - pytorch
+  - pytorch=1.0.1
   - scanpy
   - scikit-learn=0.20.2
   - scipy
